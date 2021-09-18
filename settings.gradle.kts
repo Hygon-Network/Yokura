@@ -5,6 +5,6 @@ pluginManagement {
     }
 }
 
-rootProject.name = "Airplane"
+rootProject.name = "Yokura"
 
-include("Airplane-API", "Airplane-Server")
+include("Yokura-API", "Yokura-Server")
