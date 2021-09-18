@@ -1,5 +1,5 @@
-Airplane-API
-Airplane-Server
+Yokura-API
+Yokura-Server
 
 last-tuinity
 build/
@@ -7,3 +7,5 @@ build/
 run/
 
 launcher-airplane.jar
+
+.idea/
