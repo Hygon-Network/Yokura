@@ -1,0 +1,267 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Sun, 19 Sep 2021 14:38:58 +0200
+Subject: [PATCH] Mongo utility class
+
+
+diff --git a/src/main/java/fr/hygon/yokura/MongoUtils.java b/src/main/java/fr/hygon/yokura/MongoUtils.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..bebc79372fce3cae3e3770079b4135a5a6d32d6d
+--- /dev/null
++++ b/src/main/java/fr/hygon/yokura/MongoUtils.java
+@@ -0,0 +1,255 @@
++package fr.hygon.yokura;
++
++import com.mongodb.BasicDBObject;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.concurrent.CompletableFuture;
++
++import org.bson.BsonDocument;
++import org.bson.BsonString;
++import org.bson.Document;
++
++public class MongoUtils {
++
++    /**
++     * Get a string from a document in the database
++     *
++     * @param collection The collection to use
++     * @param id         the ID containing the value (_id)
++     * @param key        la key of the value
++     * @return A string corresponding to the key
++     */
++    public static String getString(String collection, String id, String key) {
++        Document document = YokuraAPI.getMongoDatabase().getCollection(collection)
++                .find(new BsonDocument("_id", new BsonString(id))).limit(1).first();
++
++        return document == null ? null : document.getString(key);
++    }
++
++    /**
++     * Get a long from a document in the database
++     *
++     * @param collection The collection to use
++     * @param id         the ID containing the value (_id)
++     * @param key        la key of the value
++     * @return A long corresponding to the key
++     */
++    public static long getLong(String collection, String id, String key) {
++        Document document = YokuraAPI.getMongoDatabase().getCollection(collection)
++                .find(new BsonDocument("_id", new BsonString(id))).limit(1).first();
++
++        return document == null ? -1 : document.getLong(key);
++    }
++
++    /**
++     * Get an int from a document in the database
++     *
++     * @param collection The collection to use
++     * @param id         the ID containing the value (_id)
++     * @param key        la key of the value
++     * @return An int corresponding to the key
++     */
++    public static int getInt(String collection, String id, String key) {
++        Document document = YokuraAPI.getMongoDatabase().getCollection(collection)
++                .find(new BsonDocument("_id", new BsonString(id))).limit(1).first();
++
++        return document == null ? -1 : document.getInteger(key);
++    }
++
++    /**
++     * Get a double from a document in the database
++     *
++     * @param collection The collection to use
++     * @param id         the ID containing the value (_id)
++     * @param key        la key of the value
++     * @return A double corresponding to the key
++     */
++    public static double getDouble(String collection, String id, String key) {
++        Document document = YokuraAPI.getMongoDatabase().getCollection(collection)
++                .find(new BsonDocument("_id", new BsonString(id))).limit(1).first();
++
++        return document == null ? -1 : document.getDouble(key);
++    }
++
++    /**
++     * Get a boolean from a document in the database
++     *
++     * @param collection The collection to use
++     * @param id         the ID containing the value (_id)
++     * @param key        la key of the value
++     * @return A boolean corresponding to the key
++     */
++    public static boolean getBoolean(String collection, String id, String key) {
++        Document document = YokuraAPI.getMongoDatabase().getCollection(collection)
++                .find(new BsonDocument("_id", new BsonString(id))).limit(1).first();
++        return document != null && document.getBoolean(key);
++    }
++
++    /**
++     * Returns all the keys from a document
++     *
++     * @param collection the collection containing the document
++     * @param id         the id of the document
++     * @return an ArrayList containing all the keys of the document
++     */
++    public static ArrayList<String> getDocumentKeys(String collection, String id) {
++        Document document = YokuraAPI.getMongoDatabase().getCollection(collection)
++                .find(new BsonDocument("_id", new BsonString(id))).limit(1).first();
++        if (document == null) {
++            return new ArrayList<>();
++        } else {
++            ArrayList<String> documentKeys = new ArrayList<>(document.keySet());
++            documentKeys.remove("_id");
++            return documentKeys;
++        }
++    }
++
++    /**
++     * Returns a document from its ID
++     *
++     * @param collection the collection containing the document
++     * @param id         the id of the document
++     * @return a Document object corresponding to the asked values. It will return null if the document does not exist.
++     */
++    public static Document getDocumentFromId(String collection, String id) {
++        return YokuraAPI.getMongoDatabase().getCollection(collection)
++                .find(new BsonDocument("_id", new BsonString(id))).limit(1).first();
++    }
++
++    /**
++     * Verify if a document exists
++     *
++     * @param collection the collection containing the document
++     * @param id         the id of the document to verify
++     * @return true if the document exists, false if it doesn't.
++     */
++    public static boolean documentExists(String collection, String id) {
++        return YokuraAPI.getMongoDatabase().getCollection(collection).find(new Document("_id", id)).first() != null;
++    }
++
++    /**
++     * Updates a value in the database
++     *
++     * @param collection The collection containing the document that needs to be modified
++     * @param id         the ID containing the key to be modified
++     * @param key        the key that will have its value updated
++     * @param value      the new value
++     */
++    public static void updateValue(String collection, String id, String key, Object value) {
++        BasicDBObject query = new BasicDBObject("$set", new BasicDBObject(key, value));
++        YokuraAPI.getMongoDatabase().getCollection(collection).updateOne(new BsonDocument("_id", new BsonString(id)), query);
++    }
++
++    /**
++     * Add a value to an array
++     *
++     * @param collection The collection containing the document that needs to be modified
++     * @param id         the ID containing the array
++     * @param key        the key of the value
++     * @param value      the value to add to the array
++     */
++    public static void addToArray(String collection, String id, String key, Object value) {
++        BasicDBObject query = new BasicDBObject("$addToSet", new BasicDBObject(key, value));
++        YokuraAPI.getMongoDatabase().getCollection(collection).updateOne(new BsonDocument("_id", new BsonString(id)), query);
++    }
++
++    /**
++     * Remove an element from an array
++     *
++     * @param collection The collection containing the document that needs to be modified
++     * @param id         the ID containing the array
++     * @param key        the key of the value
++     * @param value      the value to delete from the array
++     */
++    public static void removeFromArray(String collection, String id, String key, Object value) {
++        BasicDBObject match = new BasicDBObject("_id", id);
++        BasicDBObject query = new BasicDBObject(key, value);
++        YokuraAPI.getMongoDatabase().getCollection(collection).updateOne(match, new BasicDBObject("$pull", query));
++    }
++
++    /**
++     * Gets an array of integer in the database as a List
++     * @param collection the collection containing the document
++     * @param id         the ID of the document
++     * @param key        the key of the value
++     * @return an empty array if the document does not exists
++     */
++    public static List<Integer> getIntList(String collection, String id, String key) {
++        Document document = YokuraAPI.getMongoDatabase().getCollection(collection).find(new Document("_id", id)).first();
++
++        return document == null ? new ArrayList<>() : document.getList(key, Integer.class);
++    }
++
++    /**
++     * Gets an array of String in the database as a List
++     * @param collection the collection containing the document
++     * @param id         the ID of the document
++     * @param key        the key of the value
++     * @return an empty array if the document does not exists
++     */
++    public static List<String> getStringList(String collection, String id, String key) {
++        Document document = YokuraAPI.getMongoDatabase().getCollection(collection).find(new Document("_id", id)).first();
++
++        return document == null ? new ArrayList<>() : document.getList(key, String.class);
++    }
++
++    /**
++     * Deletes a document from the database
++     *
++     * @param collection the collection containing the document
++     * @param id         the ID of the document
++     */
++    public static void deleteDocument(String collection, String id) {
++        YokuraAPI.getMongoDatabase().getCollection(collection).deleteOne(new BsonDocument("_id", new BsonString(id)));
++    }
++
++    /**
++     * Updates a value in the database asynchronously
++     *
++     * @param collection The collection containing the document that needs to be modified
++     * @param id         the ID containing the key to be modified
++     * @param key        the key that will have its value updated
++     * @param value      the new value
++     */
++    public static void updateValueAsync(String collection, String id, String key, Object value) {
++        BasicDBObject query = new BasicDBObject("$set", new BasicDBObject(key, value));
++        CompletableFuture.runAsync(() -> YokuraAPI.getMongoDatabase().getCollection(collection).updateOne(new BsonDocument("_id", new BsonString(id)), query));
++    }
++
++    /**
++     * Add a value to an array
++     *
++     * @param collection The collection containing the document that needs to be modified
++     * @param id         the ID containing the array
++     * @param key        la array
++     * @param value      the value to add to the array
++     */
++    public static void addToArrayAsync(String collection, String id, String key, Object value) {
++        BasicDBObject query = new BasicDBObject("$addToSet", new BasicDBObject(key, value));
++        CompletableFuture.runAsync(() -> YokuraAPI.getMongoDatabase().getCollection(collection).updateOne(new BsonDocument("_id", new BsonString(id)), query));
++    }
++
++    /**
++     * Remove an element from an array
++     *
++     * @param collection The collection containing the document that needs to be modified
++     * @param id         the ID containing the array
++     * @param key        the key of the value
++     * @param value      the value to delete from the array
++     */
++    public static void removeFromArrayAsync(String collection, String id, String key, Object value) {
++        BasicDBObject match = new BasicDBObject("_id", id);
++        BasicDBObject query = new BasicDBObject(key, value);
++        CompletableFuture.runAsync(() -> YokuraAPI.getMongoDatabase().getCollection(collection).updateOne(match, new BasicDBObject("$pull", query)));
++    }
++
++    /**
++     * Deletes a document from the database
++     *
++     * @param collection the collection containing the document
++     * @param id         the ID of the document
++     */
++    public static void deleteDocumentAsync(String collection, String id) {
++        CompletableFuture.runAsync(() -> YokuraAPI.getMongoDatabase().getCollection(collection).deleteOne(new BsonDocument("_id", new BsonString(id))));
++    }
++}
