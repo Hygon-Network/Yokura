@@ -1,0 +1,91 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Sun, 19 Sep 2021 17:12:33 +0200
+Subject: [PATCH] Add network levels and xp
+
+
+diff --git a/src/main/java/fr/hygon/yokura/event/player/NetworkLevelChangeEvent.java b/src/main/java/fr/hygon/yokura/event/player/NetworkLevelChangeEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..5854726ed3777b7f7c43a7d8bb79a7318019c4e6
+--- /dev/null
++++ b/src/main/java/fr/hygon/yokura/event/player/NetworkLevelChangeEvent.java
+@@ -0,0 +1,49 @@
++package fr.hygon.yokura.event.player;
++
++import org.bukkit.OfflinePlayer;
++import org.bukkit.event.Event;
++import org.bukkit.event.HandlerList;
++import org.jetbrains.annotations.NotNull;
++
++public class NetworkLevelChangeEvent extends Event {
++    private static final HandlerList handlers = new HandlerList();
++    private final OfflinePlayer who;
++    private final int newLevel;
++    private final int newXP;
++
++    public NetworkLevelChangeEvent(@NotNull OfflinePlayer who, int newLevel, int newXP) {
++        super();
++        this.who = who;
++        this.newLevel = newLevel;
++        this.newXP = newXP;
++    }
++
++    public OfflinePlayer getPlayer() {
++        return who;
++    }
++
++    /**
++     * @return the new network level of the player
++     */
++    public int getNewLevel() {
++        return newLevel;
++    }
++
++    /**
++     * @return the new network xp of the player
++     */
++    public int getNewXP() {
++        return newXP;
++    }
++
++    @NotNull
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    @NotNull
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
+diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
+index f989e7ddc708da86fb019ef5d8bb05ae340f73fb..ceec4bb860d87fa408d4cc68834ace92b36ca775 100644
+--- a/src/main/java/org/bukkit/OfflinePlayer.java
++++ b/src/main/java/org/bukkit/OfflinePlayer.java
+@@ -68,6 +68,25 @@ public interface OfflinePlayer extends ServerOperator, AnimalTamer, Configuratio
+      * @return true if the player has enough tokens, false if he doesn't
+      */
+     public boolean hasEnoughTokens(double tokens);
++
++    /**
++     * @return the player's network xp
++     */
++    public int getNetworkXp();
++
++    /**
++     * @return the player's network level.
++     */
++    public int getNetworkLevel();
++
++    /**
++     * Adds network xp to the player.
++     * <p>1 network level = 250 xp.</p>
++     *
++     * <p style=color:yeellow;>This method will be ran asynchronously if the player is an OfflinePlayer.</p>
++     * @param xp the amount of xp to give
++     */
++    void addNetworkXp(int xp);
+     // Yokura end
+ 
+     /**
