@@ -1,0 +1,76 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Sun, 19 Sep 2021 15:09:42 +0200
+Subject: [PATCH] Add coins and tokens
+
+
+diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
+index 3afd5f5c0208a4ee93b5dbfc2aab2b9d2e8a7544..f989e7ddc708da86fb019ef5d8bb05ae340f73fb 100644
+--- a/src/main/java/org/bukkit/OfflinePlayer.java
++++ b/src/main/java/org/bukkit/OfflinePlayer.java
+@@ -10,6 +10,65 @@ import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
+ 
+ public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable {
++    // Yokura start
++    /**
++     * @return the amount of coins of the player
++     */
++    public double getCoins();
++
++    /**
++     * @param coins the amount to add
++     */
++    public void addCoins(double coins);
++
++    /**
++     * Removes coins from the player
++     * <p style=color:darkred;> Be careful, if you remove an amount of money superior than what the player has, the player will have a negative balance.</p>
++     */
++    public void removeCoins(double coins);
++
++    /**
++     * Sets an amount of coins to the player. This method does not add coins to the player but SET its balance to the specified amount.
++     * @param coins the amount of coins
++     */
++    public void setCoins(double coins);
++
++    /**
++     * Verify if the player has enough money for something
++     * @param coins the amount of coins to verify
++     * @return true if the player has enough coins, false if he doesn't
++     */
++    public boolean hasEnoughCoins(double coins);
++
++    /**
++     * @return the amount of tokens of the player
++     */
++    public double getTokens();
++
++    /**
++     * @param tokens the amount to add
++     */
++    public void addTokens(double tokens);
++
++    /**
++     * Removes tokens from the player
++     * <p style=color:darkred;> Be careful, if you remove an amount of tokens superior than what the player has, the player will have a negative balance.</p>
++     */
++    public void removeTokens(double tokens);
++
++    /**
++     * Sets an amount of tokens to the player. This method does not add tokens to the player but SET its balance to the specified amount.
++     * @param tokens the amount of tokens
++     */
++    public void setTokens(double tokens);
++
++    /**
++     * Verify if the player has enough tokens for something
++     * @param tokens the amount of tokens to verify
++     * @return true if the player has enough tokens, false if he doesn't
++     */
++    public boolean hasEnoughTokens(double tokens);
++    // Yokura end
+ 
+     /**
+      * Checks if this player is currently online
