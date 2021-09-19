@@ -1,0 +1,128 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Sun, 19 Sep 2021 13:11:24 +0200
+Subject: [PATCH] Add MongoDB
+
+
+diff --git a/src/main/java/fr/hygon/yokura/YokuraAPIServer.java b/src/main/java/fr/hygon/yokura/YokuraAPIServer.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..6e403a6d5f7990478c5bc372b75a68398bf8eee3
+--- /dev/null
++++ b/src/main/java/fr/hygon/yokura/YokuraAPIServer.java
+@@ -0,0 +1,24 @@
++package fr.hygon.yokura;
++
++import com.mongodb.MongoClient;
++import com.mongodb.client.MongoDatabase;
++
++public class YokuraAPIServer implements IYokuraAPI {
++    private final MongoClient mongoClient;
++    private final MongoDatabase mongoDatabase;
++
++    public YokuraAPIServer(MongoClient mongoClient, MongoDatabase mongoDatabase) {
++        this.mongoClient = mongoClient;
++        this.mongoDatabase = mongoDatabase;
++    }
++
++    @Override
++    public MongoClient getMongoClient() {
++        return mongoClient;
++    }
++
++    @Override
++    public MongoDatabase getMongoDatabase() {
++        return mongoDatabase;
++    }
++}
+diff --git a/src/main/java/fr/hygon/yokura/config/YokuraGlobalConfig.java b/src/main/java/fr/hygon/yokura/config/YokuraGlobalConfig.java
+index cd6d278912dcbe310665072d2f70a21626f98f87..fa0e2957dac84215addae1172724f1b232534da1 100644
+--- a/src/main/java/fr/hygon/yokura/config/YokuraGlobalConfig.java
++++ b/src/main/java/fr/hygon/yokura/config/YokuraGlobalConfig.java
+@@ -87,4 +87,29 @@ public class YokuraGlobalConfig {
+         config.addDefault(path, def);
+         return config.getString(path, config.getString(path));
+     }
++
++    public static String mongoHost = "localhost";
++    private static void getMongoHost() {
++        mongoHost = getString("credentials.mongodb.host", mongoHost);
++    }
++
++    public static int mongoPort = 27017;
++    private static void getMongoPort() {
++        mongoPort = getInt("credentials.mongodb.port", mongoPort);
++    }
++
++    public static String mongoUser = "Hygon";
++    private static void getMongoUser() {
++        mongoUser = getString("credentials.mongodb.user", mongoUser);
++    }
++
++    public static String mongoDatabase = "Hygon";
++    private static void getMongoDatabase() {
++        mongoDatabase = getString("credentials.mongodb.database", mongoDatabase);
++    }
++
++    public static char[] mongoPassword = new char[]{};
++    private static void getMongoPassword() {
++        mongoPassword = getString("credentials.mongodb.password", "").toCharArray();
++    }
+ }
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+index 6cc6930b85e0d462ad099fae294ad36a1e1abeb3..b5c501b738fe30fe5d628fff60f93bbedd027a76 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
+ import java.util.function.BooleanSupplier;
+ import java.util.regex.Pattern;
+ import javax.annotation.Nullable;
++import fr.hygon.yokura.config.YokuraGlobalConfig; // Yokura
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.DefaultUncaughtExceptionHandlerWithName;
+ import net.minecraft.SharedConstants;
+@@ -66,6 +67,7 @@ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.apache.logging.log4j.Level;
+ import org.apache.logging.log4j.io.IoBuilder;
++import org.bson.Document; // Yokura
+ import org.bukkit.command.CommandSender;
+ import co.aikar.timings.MinecraftTimings; // Paper
+ import org.bukkit.event.server.ServerCommandEvent;
+@@ -227,11 +229,25 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         gg.airplane.commands.AirplaneCommands.init(); // Airplane - command
+         // Yokura start
+         try {
+-            fr.hygon.yokura.config.YokuraGlobalConfig.init((java.io.File) options.valueOf("yokura-global-settings"));
++            YokuraGlobalConfig.init((java.io.File) options.valueOf("yokura-global-settings"));
+         } catch (Exception exception) {
+             DedicatedServer.LOGGER.error("Couldn't load yokura configuration.", exception);
+             return false;
+         }
++
++        com.mongodb.MongoCredential mongoCredential = com.mongodb.MongoCredential.createCredential(YokuraGlobalConfig.mongoUser, YokuraGlobalConfig.mongoDatabase, YokuraGlobalConfig.mongoPassword);
++        com.mongodb.MongoClient mongoClient = new com.mongodb.MongoClient(new com.mongodb.ServerAddress(YokuraGlobalConfig.mongoHost, YokuraGlobalConfig.mongoPort), mongoCredential, com.mongodb.MongoClientOptions.builder().build());
++        com.mongodb.client.MongoDatabase mongoDatabase = mongoClient.getDatabase(YokuraGlobalConfig.mongoDatabase);
++
++        try {
++            mongoClient.getDatabase("admin").runCommand(new Document("ping", 1));
++            DedicatedServer.LOGGER.info("Connected to the MongoDB server.");
++        } catch (Exception exception) {
++            DedicatedServer.LOGGER.error("Couldn't connect to the MongoDB server.", exception);
++            return false;
++        }
++
++        fr.hygon.yokura.YokuraAPI.setInstance(new fr.hygon.yokura.YokuraAPIServer(mongoClient, mongoDatabase));
+         // Yokura end
+ 
+         this.setPvpAllowed(dedicatedserverproperties.pvp);
+diff --git a/src/main/resources/log4j2.xml b/src/main/resources/log4j2.xml
+index 5704146ae84747cafd4b5f504ba071f6be99f425..d87350a95e3048e18610ade1d776c504ea1a2dd5 100644
+--- a/src/main/resources/log4j2.xml
++++ b/src/main/resources/log4j2.xml
+@@ -50,5 +50,6 @@
+             </filters>
+             <AppenderRef ref="Async"/>
+         </Root>
++        <Logger name="org.mongodb.driver" level="off" additivity="true" />
+     </Loggers>
+ </Configuration>
