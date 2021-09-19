@@ -41,7 +41,7 @@ index 0000000000000000000000000000000000000000..ff3658c487a52502dc9a529b3d92a67e
 \ No newline at end of file
 diff --git a/src/main/java/fr/hygon/yokura/YokuraAPI.java b/src/main/java/fr/hygon/yokura/YokuraAPI.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f3d2bdb4a2dc10737eabbf9f35d0231fef706ee3
+index 0000000000000000000000000000000000000000..52e5ad87b52a221cfb12b8157d170b0249c1e4d4
 --- /dev/null
 +++ b/src/main/java/fr/hygon/yokura/YokuraAPI.java
 @@ -0,0 +1,37 @@
@@ -71,14 +71,14 @@ index 0000000000000000000000000000000000000000..f3d2bdb4a2dc10737eabbf9f35d0231f
 +    /**
 +     * @return the mongo client instance
 +     */
-+    MongoClient getMongoClient() {
++    public static MongoClient getMongoClient() {
 +        return instance.getMongoClient();
 +    }
 +
 +    /**
 +     * @return the default database used by the server
 +     */
-+    MongoDatabase getMongoDatabase() {
++    public static MongoDatabase getMongoDatabase() {
 +        return instance.getMongoDatabase();
 +    }
 +}
