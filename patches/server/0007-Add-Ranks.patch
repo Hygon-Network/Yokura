@@ -1,0 +1,195 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Sun, 19 Sep 2021 18:45:55 +0200
+Subject: [PATCH] Add Ranks
+
+
+diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+index 1fec543f820130b25d63314b1b9de75f19340bed..62fd2da6c8b9e37c4f5fc8a0b6dd2d30f4d47ff2 100644
+--- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
++++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+@@ -14,6 +14,7 @@ import java.util.OptionalInt;
+ import java.util.Random;
+ import java.util.UUID;
+ import javax.annotation.Nullable;
++import fr.hygon.yokura.entity.player.Ranks; // Yokura
+ import net.minecraft.BlockUtil;
+ import net.minecraft.ChatFormatting;
+ import net.minecraft.CrashReport;
+@@ -270,6 +271,8 @@ public class ServerPlayer extends Player {
+ 
+     public int networkXP;
+     public int networkLevel;
++
++    public java.util.ArrayList<Ranks> ranks;
+     // Yokura end
+ 
+     public ServerPlayer(MinecraftServer server, ServerLevel world, GameProfile profile, ServerLoginPacketListenerImpl loginPacketListener) { // Yokura - add loginPacketListener
+@@ -349,6 +352,7 @@ public class ServerPlayer extends Player {
+ 
+         networkXP = loginPacketListener.networkXP;
+         networkLevel = loginPacketListener.networkLevel;
++        ranks = loginPacketListener.ranks;
+         // Yokura end
+     }
+     // Paper start - Chunk priority
+diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
+index f5bdff50d25b4f08c7a20b708e6ef16d2c01728a..b006c645bab4f386de13fde00f530235d5129b69 100644
+--- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
++++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
+@@ -10,6 +10,8 @@ import java.net.InetSocketAddress;
+ import java.net.SocketAddress;
+ import java.security.PrivateKey;
+ import java.util.Arrays;
++import java.util.ArrayList; // Yokura
++import java.util.Collections; // Yokura
+ import java.util.Random;
+ import java.util.UUID;
+ import java.util.concurrent.atomic.AtomicInteger;
+@@ -18,6 +20,7 @@ import javax.crypto.Cipher;
+ import javax.crypto.SecretKey;
+ import fr.hygon.yokura.YokuraAPI; // Yokura
+ import fr.hygon.yokura.config.YokuraGlobalConfig; // Yokura
++import fr.hygon.yokura.entity.player.Ranks; // Yokura
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.network.Connection;
+ import net.minecraft.network.FriendlyByteBuf;
+@@ -76,6 +79,8 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+ 
+     public int networkXP;
+     public int networkLevel;
++
++    public ArrayList<Ranks> ranks = new ArrayList<>();
+     // Yokura end
+ 
+     public ServerLoginPacketListenerImpl(MinecraftServer server, Connection connection) {
+@@ -474,12 +479,14 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+                     .append("coins", YokuraGlobalConfig.defaultCoins)
+                     .append("tokens", YokuraGlobalConfig.defaultTokens)
+                     .append("xp", 0)
+-                    .append("level", 0);
++                    .append("level", 0)
++                    .append("ranks", new ArrayList<>(Collections.singletonList(Ranks.PLAYER.getPower())));
+ 
+             coins = YokuraGlobalConfig.defaultCoins;
+             tokens = YokuraGlobalConfig.defaultTokens;
+             networkXP = 0;
+             networkLevel = 0;
++            ranks = new ArrayList<>(Collections.singletonList(Ranks.PLAYER));
+ 
+             YokuraAPI.getMongoDatabase().getCollection("players").insertOne(playerData);
+             ServerLoginPacketListenerImpl.LOGGER.info("Profile for the player " + playerName + " created! (Took " + (System.currentTimeMillis() - startTime) + "ms).");
+@@ -488,6 +495,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+             tokens = playerData.getDouble("tokens");
+             networkXP = playerData.getInteger("xp");
+             networkLevel = playerData.getInteger("level");
++            playerData.getList("ranks", Integer.class).forEach(power -> ranks.add(Ranks.getRankFromPower(power)));
+         }
+     }
+     // Yokura end
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+index 83ab92461fba466a512428e077532896a9a2cf46..ad66a7a78d0ad5526d9ed6b1dc47cef19a19cae2 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+@@ -2,11 +2,16 @@ package org.bukkit.craftbukkit;
+ 
+ import com.mojang.authlib.GameProfile;
+ import java.io.File;
++import java.util.ArrayList;
++import java.util.Collection;
++import java.util.Collections;
+ import java.util.LinkedHashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.UUID;
++import java.util.stream.Collectors;  // Yokura
+ import fr.hygon.yokura.MongoUtils; // Yokura
++import fr.hygon.yokura.entity.player.Ranks; // Yokura
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.server.players.UserWhiteListEntry;
+ import net.minecraft.stats.ServerStatsCounter;
+@@ -120,6 +125,27 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+            MongoUtils.updateValue("players", getUniqueId().toString(), "xp", newXp);
+         });
+     }
++
++    @Override
++    public List<Ranks> getAllRanks() {
++        List<Integer> playerRanksPower = MongoUtils.getIntList("players", getUniqueId().toString(), "ranks");
++        return playerRanksPower.stream().mapToInt(rankPower -> rankPower).mapToObj(Ranks::getRankFromPower).collect(Collectors.toCollection(ArrayList::new));
++    }
++
++    @Override
++    public Ranks getRank() {
++        return Ranks.getRankFromPower(Collections.min((Collection<? extends Integer>) getAllRanks().stream().map(Ranks::getPower).collect(Collectors.toCollection(ArrayList::new))));
++    }
++
++    @Override
++    public void addRank(Ranks rank) {
++        MongoUtils.addToArrayAsync("players", getUniqueId().toString(), "ranks", rank.getPower());
++    }
++
++    @Override
++    public void removeRank(Ranks rank) {
++        MongoUtils.removeFromArrayAsync("players", getUniqueId().toString(), "ranks", rank.getPower());
++    }
+     // Yokura end
+ 
+     public GameProfile getProfile() {
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index d50e41ca8cf6e15fb5bf0234569a7f735ce7d333..e93de61ba7cc11d9ff762f585f677e5a484069fa 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
+ import com.google.common.io.BaseEncoding;
+ import com.mojang.authlib.GameProfile;
+ import fr.hygon.yokura.MongoUtils;  // Yokura
++import fr.hygon.yokura.entity.player.Ranks; // Yokura
+ import io.netty.buffer.Unpooled;
+ import java.io.ByteArrayOutputStream;
+ import java.io.IOException;
+@@ -14,6 +15,7 @@ import java.net.InetSocketAddress;
+ import java.net.SocketAddress;
+ import java.util.ArrayList;
+ import java.util.Collection;
++import java.util.Collections; // Yokura
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.LinkedHashMap;
+@@ -25,6 +27,7 @@ import java.util.UUID;
+ import java.util.WeakHashMap;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
++import java.util.stream.Collectors; // Yokura
+ import javax.annotation.Nullable;
+ import net.minecraft.Util;
+ import net.minecraft.advancements.AdvancementProgress;
+@@ -250,6 +253,28 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+ 
+         MongoUtils.updateValueAsync("players", getUniqueId().toString(), "xp", newXp);
+     }
++
++    @Override
++    public List<Ranks> getAllRanks() {
++        return getHandle().ranks;
++    }
++
++    @Override
++    public Ranks getRank() {
++        return Ranks.getRankFromPower(Collections.min((Collection<? extends Integer>) getAllRanks().stream().map(Ranks::getPower).collect(Collectors.toCollection(ArrayList::new))));
++    }
++
++    @Override
++    public void addRank(Ranks rank) {
++        getHandle().ranks.add(rank);
++        MongoUtils.addToArrayAsync("players", getUniqueId().toString(), "ranks", rank.getPower());
++    }
++
++    @Override
++    public void removeRank(Ranks rank) {
++        getHandle().ranks.remove(rank);
++        MongoUtils.removeFromArrayAsync("players", getUniqueId().toString(), "ranks", rank.getPower());
++    }
+     // Yokura end
+ 
+     public GameProfile getProfile() {

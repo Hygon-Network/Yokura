@@ -1,0 +1,102 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Sun, 19 Sep 2021 18:45:47 +0200
+Subject: [PATCH] Add Ranks
+
+
+diff --git a/src/main/java/fr/hygon/yokura/entity/player/Ranks.java b/src/main/java/fr/hygon/yokura/entity/player/Ranks.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..61c5058bc80fec246cbde0f84e7a9289badccc31
+--- /dev/null
++++ b/src/main/java/fr/hygon/yokura/entity/player/Ranks.java
+@@ -0,0 +1,44 @@
++package fr.hygon.yokura.entity.player;
++
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.format.TextColor;
++import java.util.Arrays;
++import java.util.HashMap;
++
++public enum Ranks {
++    ADMIN(0, Component.text("Admin"), Component.text("[Admin] ").color(TextColor.color(255, 0, 0))),
++    BUILDER(10, Component.text("Builder"), Component.text("[Builder] ").color(TextColor.color(0, 200, 0))),
++    PLAYER(20, Component.text("Joueur"), Component.text("[Joueur] ").color(TextColor.color(140, 140, 140)));
++
++    private static final HashMap<Integer, Ranks> ranksPower = new HashMap<>();
++
++    static {
++        Arrays.stream(Ranks.values()).forEach(ranks -> ranksPower.put(ranks.getPower(), ranks));
++    }
++
++    private final int power;
++    private final Component name;
++    private final Component prefix;
++
++    Ranks(int power, Component name, Component prefix) {
++        this.power = power;
++        this.name = name;
++        this.prefix = prefix;
++    }
++
++    public int getPower() {
++        return power;
++    }
++
++    public Component getName() {
++        return name;
++    }
++
++    public Component getPrefix() {
++        return prefix;
++    }
++
++    public static Ranks getRankFromPower(int power) {
++        return ranksPower.get(power);
++    }
++}
+diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
+index ceec4bb860d87fa408d4cc68834ace92b36ca775..a73728217c34f29389d6ac48f1db54e982f7f7d2 100644
+--- a/src/main/java/org/bukkit/OfflinePlayer.java
++++ b/src/main/java/org/bukkit/OfflinePlayer.java
+@@ -1,6 +1,8 @@
+ package org.bukkit;
+ 
++import java.util.List; // Yokura
+ import java.util.UUID;
++import fr.hygon.yokura.entity.player.Ranks; // Yokura
+ import org.bukkit.configuration.serialization.ConfigurationSerializable;
+ import org.bukkit.entity.AnimalTamer;
+ import org.bukkit.entity.EntityType;
+@@ -87,6 +89,32 @@ public interface OfflinePlayer extends ServerOperator, AnimalTamer, Configuratio
+      * @param xp the amount of xp to give
+      */
+     void addNetworkXp(int xp);
++
++    /**
++     * @return a list of the ranks of the player
++     * @see Ranks
++     */
++    public List<Ranks> getAllRanks();
++
++    /**
++     * @return the best player's rank
++     */
++    public Ranks getRank();
++    /**
++     * Gives the player a rank
++     *
++     * The database update method is ran asynchronously.
++     * @param rank the rank to give to the player
++     */
++    public void addRank(Ranks rank);
++
++    /**
++     * Removes a rank from the player.
++     *
++     * The database update method is ran asynchronously.
++     * @param rank the rank to remove from the player
++     */
++    public void removeRank(Ranks rank);
+     // Yokura end
+ 
+     /**
