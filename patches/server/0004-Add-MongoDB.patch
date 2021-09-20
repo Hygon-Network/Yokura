@@ -115,6 +115,19 @@ index 6cc6930b85e0d462ad099fae294ad36a1e1abeb3..b5c501b738fe30fe5d628fff60f93bbe
          // Yokura end
  
          this.setPvpAllowed(dedicatedserverproperties.pvp);
+diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
+index ad9fb50791779a5fe7d22268b71bd10d9c9ff3f0..b185f67bc1ad0df3b1461808a52cac9df01a3ed9 100644
+--- a/src/main/java/net/minecraft/server/players/PlayerList.java
++++ b/src/main/java/net/minecraft/server/players/PlayerList.java
+@@ -730,7 +730,7 @@ public abstract class PlayerList {
+         // depending on the outcome.
+         SocketAddress socketaddress = loginlistener.connection.getRemoteAddress();
+ 
+-        ServerPlayer entity = new ServerPlayer(this.server, this.server.getLevel(Level.OVERWORLD), gameprofile);
++        ServerPlayer entity = new ServerPlayer(this.server, this.server.getLevel(Level.OVERWORLD), gameprofile, loginlistener); // Yokura
+         Player player = entity.getBukkitEntity();
+         PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.getRawAddress()).getAddress());
+ 
 diff --git a/src/main/resources/log4j2.xml b/src/main/resources/log4j2.xml
 index 5704146ae84747cafd4b5f504ba071f6be99f425..d87350a95e3048e18610ade1d776c504ea1a2dd5 100644
 --- a/src/main/resources/log4j2.xml
