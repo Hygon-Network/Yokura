@@ -1,0 +1,140 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Mon, 20 Sep 2021 19:01:44 +0200
+Subject: [PATCH] Add broker
+
+
+diff --git a/src/main/java/fr/hygon/yokura/IYokuraAPI.java b/src/main/java/fr/hygon/yokura/IYokuraAPI.java
+index ff3658c487a52502dc9a529b3d92a67eb8cc7513..12b116cf95cc4e6f993642edd2bdd5052c17cd4a 100644
+--- a/src/main/java/fr/hygon/yokura/IYokuraAPI.java
++++ b/src/main/java/fr/hygon/yokura/IYokuraAPI.java
+@@ -2,6 +2,7 @@ package fr.hygon.yokura;
+ 
+ import com.mongodb.MongoClient;
+ import com.mongodb.client.MongoDatabase;
++import fr.hygon.yokura.broker.Message;
+ 
+ public interface IYokuraAPI {
+     /**
+@@ -13,4 +14,10 @@ public interface IYokuraAPI {
+      * @return the default database used by the server
+      */
+     MongoDatabase getMongoDatabase();
++
++    /**
++     * Publish a message on a specific channel
++     * @param message the message ({@link Message})
++     */
++    void publish(Message message);
+ }
+\ No newline at end of file
+diff --git a/src/main/java/fr/hygon/yokura/YokuraAPI.java b/src/main/java/fr/hygon/yokura/YokuraAPI.java
+index 52e5ad87b52a221cfb12b8157d170b0249c1e4d4..bcab85bfcd2770f221da84f6f4396010e4c3da92 100644
+--- a/src/main/java/fr/hygon/yokura/YokuraAPI.java
++++ b/src/main/java/fr/hygon/yokura/YokuraAPI.java
+@@ -2,6 +2,7 @@ package fr.hygon.yokura;
+ 
+ import com.mongodb.MongoClient;
+ import com.mongodb.client.MongoDatabase;
++import fr.hygon.yokura.broker.Message;
+ 
+ public class YokuraAPI {
+     private static IYokuraAPI instance;
+@@ -34,4 +35,12 @@ public class YokuraAPI {
+     public static MongoDatabase getMongoDatabase() {
+         return instance.getMongoDatabase();
+     }
++
++    /**
++     * Publish a message on a specific channel
++     * @param message the message ({@link Message})
++     */
++    public static void publish(Message message) {
++        instance.publish(message);
++    }
+ }
+diff --git a/src/main/java/fr/hygon/yokura/broker/BrokerPubSub.java b/src/main/java/fr/hygon/yokura/broker/BrokerPubSub.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d334fa37e1b4d8607f329458bbae9747110529cf
+--- /dev/null
++++ b/src/main/java/fr/hygon/yokura/broker/BrokerPubSub.java
+@@ -0,0 +1,47 @@
++package fr.hygon.yokura.broker;
++
++import java.util.ArrayList;
++
++public abstract class BrokerPubSub {
++    public ArrayList<String> channels = new ArrayList<>();
++
++    public void onReceive(String channel, byte[] message) {}
++
++    public void registerChannel(String channel) {
++        channels.add(channel);
++        pubSubManager.registerChannel(this, channel);
++    }
++
++    public void unregisterChannel(String channel) {
++        channels.remove(channel);
++        pubSubManager.unregisterChannel(this, channel);
++    }
++
++
++
++    /* PubSubManager */
++
++    private static PubSubManager pubSubManager = null;
++
++    public static void setPubSubManager(PubSubManager pubSubManager) {
++        if(BrokerPubSub.pubSubManager != null) {
++            throw new UnsupportedOperationException("Couldn't redefine the PubSubManager");
++        }
++
++        BrokerPubSub.pubSubManager = pubSubManager;
++    }
++
++    public static PubSubManager getPubSubManager() {
++        return pubSubManager;
++    }
++
++    public interface PubSubManager {
++        public void registerChannel(BrokerPubSub pubSub, String channel);
++
++        public void unregisterChannel(BrokerPubSub pubSub, String channel);
++
++        public void publish(Message message);
++
++        public void handleMessage(String channel, byte[] message);
++    }
++}
+diff --git a/src/main/java/fr/hygon/yokura/broker/Message.java b/src/main/java/fr/hygon/yokura/broker/Message.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..7089561997549c7a37813dbe28198725999bca67
+--- /dev/null
++++ b/src/main/java/fr/hygon/yokura/broker/Message.java
+@@ -0,0 +1,26 @@
++package fr.hygon.yokura.broker;
++
++import java.util.Arrays;
++
++public class Message {
++    private final String channel;
++    private final byte[] message;
++
++    public Message(String channel, byte[] message) {
++        this.channel = channel;
++        this.message = message;
++    }
++
++    public String getChannel() {
++        return channel;
++    }
++
++    public byte[] getMessage() {
++        return message;
++    }
++
++    @Override
++    public String toString() {
++        return "utils.Message{channel='" + channel + "', message=" + Arrays.toString(message) + '}';
++    }
++}
