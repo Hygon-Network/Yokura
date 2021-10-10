@@ -1,0 +1,191 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Sun, 10 Oct 2021 19:11:04 +0200
+Subject: [PATCH] Add the server system
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/PaperConfig.java b/src/main/java/com/destroystokyo/paper/PaperConfig.java
+index 3cb9e223c90f97aa106ee1e9512d33897a6bac1a..a363f21584ee364e1ea0d4d4f938647bb84023ae 100644
+--- a/src/main/java/com/destroystokyo/paper/PaperConfig.java
++++ b/src/main/java/com/destroystokyo/paper/PaperConfig.java
+@@ -369,9 +369,11 @@ public class PaperConfig {
+         autoRecipeLimit = getInt("settings.spam-limiter.recipe-spam-limit", autoRecipeLimit);
+     }
+ 
+-    public static boolean velocitySupport;
+-    public static boolean velocityOnlineMode;
++    // Yokura start - We use velocity
++    public static boolean velocitySupport = true;
++    public static boolean velocityOnlineMode = true;
+     public static byte[] velocitySecretKey;
++    /*
+     private static void velocitySupport() {
+         velocitySupport = getBoolean("settings.velocity-support.enabled", false);
+         velocityOnlineMode = getBoolean("settings.velocity-support.online-mode", false);
+@@ -382,6 +384,8 @@ public class PaperConfig {
+             velocitySecretKey = secret.getBytes(StandardCharsets.UTF_8);
+         }
+     }
++     */
++    // Yokura end
+ 
+     public static int maxBookPageSize = 2560;
+     public static double maxBookTotalSizeMultiplier = 0.98D;
+diff --git a/src/main/java/fr/hygon/yokura/YokuraAPIServer.java b/src/main/java/fr/hygon/yokura/YokuraAPIServer.java
+index e3833166e69cdb3d2ad012b270a18c566db1245c..8abb9856e92e6d6ada0a08d78aab01e7acb8356c 100644
+--- a/src/main/java/fr/hygon/yokura/YokuraAPIServer.java
++++ b/src/main/java/fr/hygon/yokura/YokuraAPIServer.java
+@@ -5,14 +5,20 @@ import com.mongodb.client.MongoDatabase;
+ import fr.hygon.yokura.broker.Message;
+ import fr.hygon.yokura.broker.YokuraBroker;
+ import fr.hygon.yokura.broker.packets.MessagePacket;
++import fr.hygon.yokura.servers.Status;
++import java.io.ByteArrayOutputStream;
++import java.io.DataOutputStream;
++import java.io.IOException;
+ 
+ public class YokuraAPIServer implements IYokuraAPI {
+     private final MongoClient mongoClient;
+     private final MongoDatabase mongoDatabase;
++    private final String serverID;
+ 
+-    public YokuraAPIServer(MongoClient mongoClient, MongoDatabase mongoDatabase) {
++    public YokuraAPIServer(MongoClient mongoClient, MongoDatabase mongoDatabase, String serverID) {
+         this.mongoClient = mongoClient;
+         this.mongoDatabase = mongoDatabase;
++        this.serverID = serverID;
+     }
+ 
+     @Override
+@@ -30,4 +36,27 @@ public class YokuraAPIServer implements IYokuraAPI {
+         MessagePacket messagePacket = new MessagePacket(message);
+         YokuraBroker.sendPacket(messagePacket);
+     }
++
++    @Override
++    public String getServerID() {
++        return serverID;
++    }
++
++    @Override
++    public void setStatus(Status status) {
++        if(getServerID() != null) {
++            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
++            DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
++
++            try {
++                dataOutputStream.writeUTF(getServerID());
++                dataOutputStream.writeUTF(status.toString());
++            } catch (IOException exception) {
++                exception.printStackTrace();
++            }
++
++            publish(new Message("SERVER_STATUS_UPDATE", byteArrayOutputStream.toByteArray()));
++            MongoUtils.updateValueAsync("network", getServerID(), "status", status.toString());
++        }
++    }
+ }
+diff --git a/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java b/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java
+index 6dea767b5b9ac2b54d809c41cff6624194073919..13bd4fab1d715ff703b2654cbfbcbc153ef4489f 100644
+--- a/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java
++++ b/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java
+@@ -44,6 +44,7 @@ public class YokuraBroker {
+                     if(future.isSuccess()) {
+                         brokerChannel = future.channel();
+                         sendPacket(new RegisterClientPacket());
++                        Thread.sleep(100); //Give some time for the packet to be sent and treated.
+                     }
+ 
+                     synchronized (locker) {
+diff --git a/src/main/java/fr/hygon/yokura/broker/packets/MessagePacket.java b/src/main/java/fr/hygon/yokura/broker/packets/MessagePacket.java
+index 50f01885e9e1149324da157a41c58f72ae927a42..845c8a18bcf9e1029610b5e344c6da84b751864b 100644
+--- a/src/main/java/fr/hygon/yokura/broker/packets/MessagePacket.java
++++ b/src/main/java/fr/hygon/yokura/broker/packets/MessagePacket.java
+@@ -10,6 +10,10 @@ import java.nio.charset.StandardCharsets;
+ public class MessagePacket implements Packet {
+     private final Message message;
+ 
++    public MessagePacket() {
++        this.message = null;
++    }
++
+     public MessagePacket(Message message) {
+         this.message = message;
+     }
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 001797b2bbeb47deabce4ef7788e13834ff6f13f..6a3271a42e701234bf7274b2e259f64862f23141 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -1039,6 +1039,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         // Paper end
+         // CraftBukkit end
+         MinecraftServer.LOGGER.info("Stopping server");
++        fr.hygon.yokura.YokuraAPI.setStatus(fr.hygon.yokura.servers.Status.STOPPING); // Yokura
+         MinecraftTimings.stopServer(); // Paper
+         // CraftBukkit start
+         if (this.server != null) {
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+index 690b73f6f990e6117927babc6012d95d442dd5e4..9cc5018ebcc9e5e4c502a33c101e9ce96ea8de7c 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
+ import java.util.function.BooleanSupplier;
+ import java.util.regex.Pattern;
+ import javax.annotation.Nullable;
++import fr.hygon.yokura.broker.BrokerPubSub; // Yokura
+ import fr.hygon.yokura.broker.YokuraBroker; // Yokura
+ import fr.hygon.yokura.config.YokuraGlobalConfig; // Yokura
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+@@ -248,13 +249,23 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+             return false;
+         }
+ 
+-        fr.hygon.yokura.YokuraAPI.setInstance(new fr.hygon.yokura.YokuraAPIServer(mongoClient, mongoDatabase));
++        fr.hygon.yokura.YokuraAPI.setInstance(new fr.hygon.yokura.YokuraAPIServer(mongoClient, mongoDatabase, (String) options.valueOf("network-server-name")));
+ 
+         YokuraBroker broker = new YokuraBroker();
+         if(!broker.connect(YokuraGlobalConfig.brokerHost, YokuraGlobalConfig.brokerPort)) {
+             DedicatedServer.LOGGER.error("Couldn't connect to the broker.");
+             return false;
+         }
++
++        BrokerPubSub brokerPubSub = new fr.hygon.yokura.broker.BrokerPubSub() {
++            @Override
++            public void onReceive(String channel, byte[] message) {
++                if(channel.equals("FORWARDING_SECRET_UPDATE")) {
++                    com.destroystokyo.paper.PaperConfig.velocitySecretKey = message;
++                }
++            }
++        };
++        brokerPubSub.registerChannel("FORWARDING_SECRET_UPDATE");
+         // Yokura end
+ 
+         this.setPvpAllowed(dedicatedserverproperties.pvp);
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServerProperties.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServerProperties.java
+index 0544ac93513d3a274bfb53bb6120bd598f4d603b..597d83d6bfcf31628af4748209ad9f8002087f76 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedServerProperties.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServerProperties.java
+@@ -15,7 +15,7 @@ import net.minecraft.world.level.levelgen.WorldGenSettings;
+ public class DedicatedServerProperties extends Settings<DedicatedServerProperties> {
+ 
+     public final boolean debug = this.get("debug", false); // CraftBukkit
+-    public final boolean onlineMode = this.get("online-mode", true);
++    public final boolean onlineMode = this.get("online-mode", false); // Yokura - We use Velocity
+     public final boolean preventProxyConnections = this.get("prevent-proxy-connections", false);
+     public final String serverIp = this.get("server-ip", "");
+     public final boolean spawnAnimals = this.get("spawn-animals", true);
+diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
+index 47ebe05630738e09094a583d1bf37c8ee566521a..b0b9c029045dab824fe605ff013d622120618f5a 100644
+--- a/src/main/java/org/bukkit/craftbukkit/Main.java
++++ b/src/main/java/org/bukkit/craftbukkit/Main.java
+@@ -166,6 +166,10 @@ public class Main {
+                         .ofType(File.class)
+                         .defaultsTo(new File(org.apache.commons.io.FileUtils.getUserDirectory() + File.separator + "HygonNetwork" + File.separator + "yokura-global.yml"))
+                         .describedAs("YML File");
++                accepts("network-server-name")
++                        .withRequiredArg()
++                        .ofType(String.class)
++                        .describedAs("Network's server name.");
+                 // Yokura end
+             }
+         };

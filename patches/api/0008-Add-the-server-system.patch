@@ -1,0 +1,84 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Sun, 10 Oct 2021 19:10:56 +0200
+Subject: [PATCH] Add the server system
+
+
+diff --git a/src/main/java/fr/hygon/yokura/IYokuraAPI.java b/src/main/java/fr/hygon/yokura/IYokuraAPI.java
+index 12b116cf95cc4e6f993642edd2bdd5052c17cd4a..567ced5aaea9c0e6014ceff50fdfcc2b62afc0de 100644
+--- a/src/main/java/fr/hygon/yokura/IYokuraAPI.java
++++ b/src/main/java/fr/hygon/yokura/IYokuraAPI.java
+@@ -3,6 +3,7 @@ package fr.hygon.yokura;
+ import com.mongodb.MongoClient;
+ import com.mongodb.client.MongoDatabase;
+ import fr.hygon.yokura.broker.Message;
++import fr.hygon.yokura.servers.Status;
+ 
+ public interface IYokuraAPI {
+     /**
+@@ -20,4 +21,16 @@ public interface IYokuraAPI {
+      * @param message the message ({@link Message})
+      */
+     void publish(Message message);
++
++    /**
++     * @return the server id. Returns null if the current server is a static server.
++     */
++    String getServerID();
++
++    /**
++     * Updates the status of the server
++     * @param status the nex status
++     * @see Status for the status list
++     */
++    void setStatus(Status status);
+ }
+\ No newline at end of file
+diff --git a/src/main/java/fr/hygon/yokura/YokuraAPI.java b/src/main/java/fr/hygon/yokura/YokuraAPI.java
+index bcab85bfcd2770f221da84f6f4396010e4c3da92..5ce1e694d3f12914791da70618c8c341f115f1cf 100644
+--- a/src/main/java/fr/hygon/yokura/YokuraAPI.java
++++ b/src/main/java/fr/hygon/yokura/YokuraAPI.java
+@@ -3,6 +3,7 @@ package fr.hygon.yokura;
+ import com.mongodb.MongoClient;
+ import com.mongodb.client.MongoDatabase;
+ import fr.hygon.yokura.broker.Message;
++import fr.hygon.yokura.servers.Status;
+ 
+ public class YokuraAPI {
+     private static IYokuraAPI instance;
+@@ -43,4 +44,21 @@ public class YokuraAPI {
+     public static void publish(Message message) {
+         instance.publish(message);
+     }
++
++
++    /**
++     * @return the server id. Returns null if the current server is a static server.
++     */
++    public static String getServerID() {
++        return instance.getServerID();
++    }
++
++    /**
++     * Updates the status of the server
++     * @param status the nex status
++     * @see Status for the status list
++     */
++    public static void setStatus(Status status) {
++        instance.setStatus(status);
++    }
+ }
+diff --git a/src/main/java/fr/hygon/yokura/servers/Status.java b/src/main/java/fr/hygon/yokura/servers/Status.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..edd1fd651b866d02b0d299be255ae31790edd523
+--- /dev/null
++++ b/src/main/java/fr/hygon/yokura/servers/Status.java
+@@ -0,0 +1,8 @@
++package fr.hygon.yokura.servers;
++
++public enum Status {
++    STARTING(),
++    WAITING_PLAYERS(),
++    IN_GAME(),
++    STOPPING();
++}
