@@ -1,0 +1,62 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Wed, 20 Oct 2021 13:38:50 +0200
+Subject: [PATCH] Add QuestionPrompt utility
+
+
+diff --git a/src/main/java/fr/hygon/yokura/entity/player/QuestionPrompt.java b/src/main/java/fr/hygon/yokura/entity/player/QuestionPrompt.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..cf5d5a077ae9be33e1616bc7d1ef2c4f3fe97b9e
+--- /dev/null
++++ b/src/main/java/fr/hygon/yokura/entity/player/QuestionPrompt.java
+@@ -0,0 +1,31 @@
++package fr.hygon.yokura.entity.player;
++
++public abstract class QuestionPrompt {
++    /**
++     * Code executed before the GUI is displayed to the player.
++     */
++    public void onAsk() {
++
++    }
++
++    /**
++     * Code executed when the player refuses the question.
++     */
++    public void onRefuse() {
++
++    }
++
++    /**
++     * Code execute when the player accepts the question.
++     */
++    public void onAccept() {
++
++    }
++
++    /**
++     * Code executed when the player leaves the GUI without clicking the "Refuse" button (disconnection, crash, etc...)
++     */
++    public void onQuit() {
++
++    }
++}
+diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
+index f445e56e6115171dabaa283f62f0a74504041888..a73bfa9e5d9cc5774b9672c9454c58888230b39c 100644
+--- a/src/main/java/org/bukkit/entity/Player.java
++++ b/src/main/java/org/bukkit/entity/Player.java
+@@ -78,6 +78,14 @@ public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginM
+      */
+     @NotNull
+     List<ParticleList> getBoughtParticles();
++
++    /**
++     * Opens the interface of a question prompt
++     * @param title the title of the GUI
++     * @param questionPrompt the question prompt to open
++     * @see fr.hygon.yokura.entity.player.QuestionPrompt
++     */
++    void askQuestion(Component title, fr.hygon.yokura.entity.player.QuestionPrompt questionPrompt);
+     // Yokura end
+     // Paper start
+     @Override

@@ -1,0 +1,126 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Wed, 20 Oct 2021 13:38:57 +0200
+Subject: [PATCH] Add QuestionPrompt utility
+
+
+diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+index 3c5593661e59ee8cd98b3ce6164a9e5a197877a3..4bb87723b1eef11215128a0c34d57a32c9f39dde 100644
+--- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
++++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+@@ -278,6 +278,8 @@ public class ServerPlayer extends Player {
+ 
+     public ParticleList particle;
+     public ArrayList<ParticleList> boughtParticles;
++
++    @Nullable public fr.hygon.yokura.entity.player.QuestionPrompt questionPrompt = null;
+     // Yokura end
+ 
+     public ServerPlayer(MinecraftServer server, ServerLevel world, GameProfile profile, ServerLoginPacketListenerImpl loginPacketListener) { // Yokura - add loginPacketListener
+diff --git a/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
+index 5d7c47b0a302f7db95a0b2bb811c5656c6b02beb..815de6e87fd322c1832e2be08e16399dfe7d5f99 100644
+--- a/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
++++ b/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
+@@ -1950,6 +1950,12 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
+             this.processedDisconnect = true;
+         }
+         // CraftBukkit end
++        // Yokura start
++        if(this.player.questionPrompt != null) {
++            this.player.questionPrompt.onQuit();
++            this.player.questionPrompt = null;
++        }
++        // Yokura end
+         ServerGamePacketListenerImpl.LOGGER.info("{} lost connection: {}", this.player.getName().getString(), reason.getString());
+         // CraftBukkit start - Replace vanilla quit message handling with our own.
+         /*
+@@ -2570,7 +2576,14 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
+         PacketUtils.ensureRunningOnSameThread(packetplayinclosewindow, this, this.player.getLevel());
+ 
+         if (this.player.isImmobile()) return; // CraftBukkit
+-        CraftEventFactory.handleInventoryCloseEvent(this.player, reason); // CraftBukkit // Paper
++        // Yokura start
++        if(this.player.questionPrompt != null) {
++            this.player.questionPrompt.onQuit();
++            this.player.questionPrompt = null;
++        } else {
++            CraftEventFactory.handleInventoryCloseEvent(this.player, reason); // CraftBukkit // Paper
++        }
++        // Yokura end
+ 
+         this.player.doCloseContainer();
+     }
+@@ -2771,6 +2784,26 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
+                     if (click == ClickType.NUMBER_KEY) {
+                         event = new InventoryClickEvent(inventory, type, packet.getSlotNum(), click, action, packet.getButtonNum());
+                     } else {
++                        // Yokura start
++                        if(this.player.questionPrompt != null) {
++                            org.bukkit.inventory.ItemStack clickedItem = inventory.getItem(packet.getSlotNum());
++                            if(clickedItem != null) {
++                                if(clickedItem.getType() == org.bukkit.Material.GREEN_STAINED_GLASS_PANE) {
++                                    this.player.questionPrompt.onAccept();
++                                    this.player.questionPrompt = null;
++                                    this.player.closeContainer();
++                                } else if(clickedItem.getType() == org.bukkit.Material.RED_STAINED_GLASS_PANE) {
++                                    this.player.questionPrompt.onRefuse();
++                                    this.player.questionPrompt = null;
++                                    this.player.closeContainer();
++                                } else if(clickedItem.getType() == org.bukkit.Material.BARRIER) {
++                                    this.player.questionPrompt.onQuit();
++                                    this.player.questionPrompt = null;
++                                    this.player.closeContainer();
++                                }
++                            }
++                        }
++                        // Yokura end
+                         event = new InventoryClickEvent(inventory, type, packet.getSlotNum(), click, action);
+                     }
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index fe83bb8458dbdcecfa9255457561629534421889..a50fc34d387653cb13995eca828e35b6e73a9574 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -308,6 +308,42 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+     public @NotNull List<ParticleList> getBoughtParticles() {
+         return getHandle().boughtParticles;
+     }
++
++    @Override
++    public void askQuestion(net.kyori.adventure.text.Component title, fr.hygon.yokura.entity.player.QuestionPrompt questionPrompt) {
++        org.bukkit.inventory.Inventory GUI = Bukkit.createInventory(null, 27, title);
++
++        ItemStack accept = new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1);
++        org.bukkit.inventory.meta.ItemMeta acceptMeta = accept.getItemMeta();
++
++        acceptMeta.displayName(net.kyori.adventure.text.Component.text("Accepter").color(net.kyori.adventure.text.format.TextColor.color(0, 140, 0))
++                .decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
++        accept.setItemMeta(acceptMeta);
++
++        ItemStack refuse = new ItemStack(Material.RED_STAINED_GLASS_PANE, 1);
++        org.bukkit.inventory.meta.ItemMeta refuseMeta = accept.getItemMeta();
++
++        refuseMeta.displayName(net.kyori.adventure.text.Component.text("Refuser").color(net.kyori.adventure.text.format.TextColor.color(225, 45, 40))
++                .decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
++        refuse.setItemMeta(refuseMeta);
++
++        ItemStack cancel = new ItemStack(Material.BARRIER, 1);
++        org.bukkit.inventory.meta.ItemMeta cancelMeta = accept.getItemMeta();
++
++        cancelMeta.displayName(net.kyori.adventure.text.Component.text("Annuler").color(net.kyori.adventure.text.format.TextColor.color(180, 0, 0))
++                .decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
++        cancel.setItemMeta(cancelMeta);
++
++        GUI.setItem(11, accept);
++        GUI.setItem(15, refuse);
++        GUI.setItem(22, cancel);
++
++        questionPrompt.onAsk();
++        closeInventory();
++        openInventory(GUI);
++        getHandle().questionPrompt = questionPrompt; // We must set it AFTER we opened the inventory,
++        // else the quit method will be called if the player had a GUI opened before because it'll close the old GUI and open this one
++    }
+     // Yokura end
+ 
+     public GameProfile getProfile() {
