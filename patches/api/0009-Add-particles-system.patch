@@ -1,0 +1,167 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Thu, 14 Oct 2021 21:48:47 +0200
+Subject: [PATCH] Add particles system
+
+
+diff --git a/src/main/java/fr/hygon/yokura/entity/player/ParticleList.java b/src/main/java/fr/hygon/yokura/entity/player/ParticleList.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..5854249acd514cf8e55dffc490f78f7068522848
+--- /dev/null
++++ b/src/main/java/fr/hygon/yokura/entity/player/ParticleList.java
+@@ -0,0 +1,98 @@
++package fr.hygon.yokura.entity.player;
++
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.format.TextColor;
++import net.kyori.adventure.text.format.TextDecoration;
++import org.bukkit.Color;
++import org.bukkit.Material;
++import org.bukkit.Particle;
++import org.bukkit.entity.Entity;
++import org.jetbrains.annotations.NotNull;
++
++public enum ParticleList {
++    NONE(Component.text("Retirer la particule")
++            .color(TextColor.color(180, 0, 0)).decoration(TextDecoration.ITALIC, false), Material.BARRIER, 0, false, (entity -> {})),
++    ENDERMAN(Component.text("Enderman")
++            .color(TextColor.color(165, 35, 210)).decoration(TextDecoration.ITALIC, false), Material.ENDER_PEARL, 1000, true, (entity) -> {
++
++        final double offsetX = 0.4;
++        final double offsetY = 0.3;
++        final double offsetZ = 0.4;
++
++        entity.getWorld().spawnParticle(Particle.SPELL_WITCH, entity.getLocation().add(0, 0.7,0), 4, offsetX, offsetY, offsetZ);
++
++        Particle.DustOptions dustOptions = new Particle.DustOptions(Color.fromRGB(162,52,255), 1);
++        entity.getWorld().spawnParticle(Particle.REDSTONE, entity.getLocation().add(0, 0.7,0), 4, offsetX, offsetY, offsetZ, 1, dustOptions);
++
++        double red = 162 / 255D;
++        double green = 52 / 255D;
++        double blue = 255 / 255D;
++        entity.getWorld().spawnParticle(Particle.SPELL_MOB, entity.getLocation(), 0, red, green, blue, 1);
++    });
++
++    private final Component name;
++    private final Material item;
++    private final double price;
++    private final boolean canBeBought;
++    private final ParticleRunnable runnable;
++
++    ParticleList(Component name, Material item, long price, boolean canBeBought, ParticleRunnable runnable) {
++        this.name = name;
++        this.item = item;
++        this.price = price;
++        this.canBeBought = canBeBought;
++        this.runnable = runnable;
++    }
++
++    /**
++     * @return the human-readable name that must be used in GUIs, tchat etc...
++     */
++    @NotNull
++    public Component getName() {
++        return name;
++    }
++
++    /**
++     * Each particle has an item that represents it.
++     * @return returns the item Material that represents the particle
++     */
++    @NotNull
++    public Material getItem() {
++        return item;
++    }
++
++    /**
++     * Particles that can't be bought have a price of 0.
++     * @return the price of the particle
++     */
++    public double getPrice() {
++        return canBeBought() ? price : 0;
++    }
++
++    /**
++     * Some particles can be bought, and some can't be with money.
++     * @return true if we can buy the particle, false if we can't
++     */
++    public boolean canBeBought() {
++        return canBeBought;
++    }
++
++    /**
++     * Each particle has a piece of code that is executed to display the effect.
++     *
++     * The code is executed each 5 ticks.
++     * The display code is not limited to players, so you can give any entity a particle effect even if they didn't buy the particle.
++     * @return a ParticleRunnable containing the code the particle must execute to display.
++     */
++    @NotNull
++    public ParticleRunnable getParticle() {
++        return runnable;
++    }
++
++    public interface ParticleRunnable {
++        /**
++         * @param uuid the entity that will be affected by the particles
++         */
++        void spawnParticle(@NotNull Entity uuid);
++    }
++}
+diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
+index 3e8cd3971ac8256a40d9b85cd7514998c965512c..f445e56e6115171dabaa283f62f0a74504041888 100644
+--- a/src/main/java/org/bukkit/entity/Player.java
++++ b/src/main/java/org/bukkit/entity/Player.java
+@@ -1,10 +1,12 @@
+ package org.bukkit.entity;
+ 
+ import java.net.InetSocketAddress;
++import java.util.List; // Yokura
+ import java.util.Set; // Paper
+ import java.util.UUID;
+ import com.destroystokyo.paper.ClientOption; // Paper
+ import com.destroystokyo.paper.Title; // Paper
++import fr.hygon.yokura.entity.player.ParticleList; // Yokura
+ import net.kyori.adventure.text.Component;
+ import com.destroystokyo.paper.profile.PlayerProfile; // Paper
+ import java.util.Date; // Paper
+@@ -44,6 +46,39 @@ import org.jetbrains.annotations.Nullable;
+  */
+ public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginMessageRecipient, net.kyori.adventure.identity.Identified, com.destroystokyo.paper.network.NetworkClient { // Paper
+ 
++    // Yokura start
++    /**
++     * @return the particle the player is using.
++     */
++    @NotNull
++    ParticleList getParticle();
++
++    /**
++     * Buy a particle for the player (adds it to the database and withdraw the price from its balance)
++     * @param particle the particle the player wants to buy
++     */
++    void buyParticle(@NotNull ParticleList particle);
++
++    /**
++     * Set the particle effect of the player.
++     *
++     * @param particle the particle the player wants to buy
++     */
++    void setParticle(@NotNull ParticleList particle);
++
++    /**
++     * Checks if the player has already bought a particle
++     * @param particle the particle to check
++     * @return true if the player has bought the particle, false if he didn't
++     */
++    boolean hasBoughtParticle(@NotNull ParticleList particle);
++
++    /**
++     * @return a List containing all the particles the player has.
++     */
++    @NotNull
++    List<ParticleList> getBoughtParticles();
++    // Yokura end
+     // Paper start
+     @Override
+     default @NotNull net.kyori.adventure.identity.Identity identity() {
