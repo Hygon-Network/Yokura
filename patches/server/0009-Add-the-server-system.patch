@@ -85,18 +85,6 @@ index e3833166e69cdb3d2ad012b270a18c566db1245c..8abb9856e92e6d6ada0a08d78aab01e7
 +        }
 +    }
  }
-diff --git a/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java b/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java
-index 6dea767b5b9ac2b54d809c41cff6624194073919..13bd4fab1d715ff703b2654cbfbcbc153ef4489f 100644
---- a/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java
-+++ b/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java
-@@ -44,6 +44,7 @@ public class YokuraBroker {
-                     if(future.isSuccess()) {
-                         brokerChannel = future.channel();
-                         sendPacket(new RegisterClientPacket());
-+                        Thread.sleep(100); //Give some time for the packet to be sent and treated.
-                     }
- 
-                     synchronized (locker) {
 diff --git a/src/main/java/fr/hygon/yokura/broker/packets/MessagePacket.java b/src/main/java/fr/hygon/yokura/broker/packets/MessagePacket.java
 index 50f01885e9e1149324da157a41c58f72ae927a42..845c8a18bcf9e1029610b5e344c6da84b751864b 100644
 --- a/src/main/java/fr/hygon/yokura/broker/packets/MessagePacket.java

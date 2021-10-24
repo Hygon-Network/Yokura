@@ -31,10 +31,10 @@ index 6e403a6d5f7990478c5bc372b75a68398bf8eee3..e3833166e69cdb3d2ad012b270a18c56
  }
 diff --git a/src/main/java/fr/hygon/yokura/broker/ClientHandler.java b/src/main/java/fr/hygon/yokura/broker/ClientHandler.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..1999cfcbfd02597afffe44976c3d4434c6c816ff
+index 0000000000000000000000000000000000000000..2749093c5197535d595046d4bb45dcc4249dbca6
 --- /dev/null
 +++ b/src/main/java/fr/hygon/yokura/broker/ClientHandler.java
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,57 @@
 +package fr.hygon.yokura.broker;
 +
 +import fr.hygon.yokura.broker.packets.Packet;
@@ -45,17 +45,41 @@ index 0000000000000000000000000000000000000000..1999cfcbfd02597afffe44976c3d4434
 +import io.netty.channel.ChannelInboundHandlerAdapter;
 +
 +public class ClientHandler extends ChannelInboundHandlerAdapter {
++    private ByteBuf packetBuf;
++
++    @Override
++    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
++        packetBuf = ctx.alloc().buffer(4);
++    }
++
++    @Override
++    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
++        packetBuf.release();
++        packetBuf = null;
++    }
++
 +    @Override
 +    public void channelRead(ChannelHandlerContext channelHandlerContext, Object object) {
 +        ByteBuf byteBuf = (ByteBuf) object;
++        packetBuf.writeBytes(byteBuf);
++        byteBuf.release();
 +
-+        int packetID = byteBuf.readInt();
-+        Packet packet = Packets.getPacketByID(packetID);
-+        if(packet == null) {
-+            System.err.println("Received unknown packet with id " + packetID);
-+            return;
++        if(packetBuf.readableBytes() >= 4) {
++            int packetSize = packetBuf.readInt();
++            if(packetBuf.readableBytes() >= packetSize) {
++                int packetID = packetBuf.readInt();
++                Packet packet = Packets.getPacketByID(packetID);
++                if(packet == null) {
++                    System.err.println("Received unknown packet with id " + packetID);
++                    return;
++                }
++                packet.read(channelHandlerContext, packetBuf);
++                packetBuf = channelHandlerContext.alloc().buffer(4);
++            } else {
++                packetBuf.resetReaderIndex();
++                packetBuf.resetWriterIndex();
++            }
 +        }
-+        packet.read(channelHandlerContext, byteBuf);
 +    }
 +
 +    @Override
@@ -131,10 +155,10 @@ index 0000000000000000000000000000000000000000..e280974c7ef54d0dfa6b4b01b38a2590
 +}
 diff --git a/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java b/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..6dea767b5b9ac2b54d809c41cff6624194073919
+index 0000000000000000000000000000000000000000..5a62dee7c1c988159c3556b8aeb6965253e33688
 --- /dev/null
 +++ b/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java
-@@ -0,0 +1,93 @@
+@@ -0,0 +1,106 @@
 +package fr.hygon.yokura.broker;
 +
 +import fr.hygon.yokura.broker.packets.Packet;
@@ -181,6 +205,7 @@ index 0000000000000000000000000000000000000000..6dea767b5b9ac2b54d809c41cff66241
 +                    if(future.isSuccess()) {
 +                        brokerChannel = future.channel();
 +                        sendPacket(new RegisterClientPacket());
++                        Thread.sleep(100); //Give some time for the packet to be sent and treated.
 +                    }
 +
 +                    synchronized (locker) {
@@ -225,9 +250,22 @@ index 0000000000000000000000000000000000000000..6dea767b5b9ac2b54d809c41cff66241
 +        byteBuf.writeLong(CLIENT_UUID.getLeastSignificantBits());
 +
 +        packet.write(byteBuf);
++        writePacketSize(byteBuf);
 +        brokerChannel.writeAndFlush(byteBuf);
 +    }
++
++    private static void writePacketSize(ByteBuf byteBuf) {
++        byte[] bytes = new byte[byteBuf.readableBytes()];
++        byteBuf.readBytes(bytes);
++
++        byteBuf.resetReaderIndex();
++        byteBuf.resetWriterIndex();
++
++        byteBuf.writeInt(bytes.length);
++        byteBuf.writeBytes(bytes);
++    }
 +}
+\ No newline at end of file
 diff --git a/src/main/java/fr/hygon/yokura/broker/packets/ChannelPacket.java b/src/main/java/fr/hygon/yokura/broker/packets/ChannelPacket.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..dbeeffd6b2e4ba046e025d17bbf92edcd464593e
