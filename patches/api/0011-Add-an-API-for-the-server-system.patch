@@ -1,0 +1,65 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Tue, 26 Oct 2021 21:17:01 +0200
+Subject: [PATCH] Add an API for the server system
+
+
+diff --git a/src/main/java/fr/hygon/yokura/servers/ServerAPI.java b/src/main/java/fr/hygon/yokura/servers/ServerAPI.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..ab0fa00809d2cbd7631a12345a682f617e199dce
+--- /dev/null
++++ b/src/main/java/fr/hygon/yokura/servers/ServerAPI.java
+@@ -0,0 +1,25 @@
++package fr.hygon.yokura.servers;
++
++import com.mongodb.QueryBuilder;
++import com.mongodb.client.FindIterable;
++import fr.hygon.yokura.YokuraAPI;
++import org.bson.Document;
++import org.bson.conversions.Bson;
++import java.util.ArrayList;
++import java.util.List;
++
++public class ServerAPI {
++    public static List<String> getJoignableServers(ServersList serverType) {
++        QueryBuilder queryBuilder = new QueryBuilder();
++        queryBuilder.put("status").in(new String[]{"STARTING", "WAITING_PLAYERS"});
++        queryBuilder.put("server_type").is(serverType.toString());
++        FindIterable<Document> servers = YokuraAPI.getMongoDatabase().getCollection("network").find((Bson) queryBuilder.get());
++
++        ArrayList<String> serverList = new ArrayList<>();
++        for(Document server : servers) {
++            serverList.add(server.getString("_id"));
++        }
++
++        return serverList;
++    }
++}
+diff --git a/src/main/java/fr/hygon/yokura/servers/ServersList.java b/src/main/java/fr/hygon/yokura/servers/ServersList.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..94405d061a9f87ff2802a76e574c380c675761f2
+--- /dev/null
++++ b/src/main/java/fr/hygon/yokura/servers/ServersList.java
+@@ -0,0 +1,5 @@
++package fr.hygon.yokura.servers;
++
++public enum ServersList {
++    HUB();
++}
+diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
+index a73bfa9e5d9cc5774b9672c9454c58888230b39c..04969f862c443c87ad886df0e6fe251e6dd1f24a 100644
+--- a/src/main/java/org/bukkit/entity/Player.java
++++ b/src/main/java/org/bukkit/entity/Player.java
+@@ -86,6 +86,12 @@ public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginM
+      * @see fr.hygon.yokura.entity.player.QuestionPrompt
+      */
+     void askQuestion(Component title, fr.hygon.yokura.entity.player.QuestionPrompt questionPrompt);
++
++    /**
++     * Sends the player to the specified server
++     * @param server the server
++     */
++    void sendToServer(String server);
+     // Yokura end
+     // Paper start
+     @Override

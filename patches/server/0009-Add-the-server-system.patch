@@ -101,10 +101,18 @@ index 50f01885e9e1149324da157a41c58f72ae927a42..845c8a18bcf9e1029610b5e344c6da84
          this.message = message;
      }
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 001797b2bbeb47deabce4ef7788e13834ff6f13f..6a3271a42e701234bf7274b2e259f64862f23141 100644
+index 001797b2bbeb47deabce4ef7788e13834ff6f13f..d39ebe1f4c3bf1eff4e50f6cab54358d6c476a38 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -1039,6 +1039,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -12,6 +12,7 @@ import com.mojang.authlib.GameProfile;
+ import com.mojang.authlib.GameProfileRepository;
+ import com.mojang.authlib.minecraft.MinecraftSessionService;
+ import com.mojang.datafixers.DataFixer;
++import fr.hygon.yokura.servers.Status; // Yokura
+ import io.papermc.paper.adventure.PaperAdventure; // Paper
+ import it.unimi.dsi.fastutil.longs.LongIterator;
+ import java.awt.GraphicsEnvironment;
+@@ -1039,6 +1040,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
          // Paper end
          // CraftBukkit end
          MinecraftServer.LOGGER.info("Stopping server");
@@ -112,6 +120,14 @@ index 001797b2bbeb47deabce4ef7788e13834ff6f13f..6a3271a42e701234bf7274b2e259f648
          MinecraftTimings.stopServer(); // Paper
          // CraftBukkit start
          if (this.server != null) {
+@@ -1226,6 +1228,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+                 String doneTime = String.format(java.util.Locale.ROOT, "%.3fs", (double) (Util.getNanos() - serverStartTime) / 1.0E9D);
+                 LOGGER.info("Done ({})! For help, type \"help\"", doneTime);
+                 // Paper end
++                fr.hygon.yokura.YokuraAPI.setStatus(Status.WAITING_PLAYERS); // Yokura
+ 
+                 org.spigotmc.WatchdogThread.tick(); // Paper
+                 org.spigotmc.WatchdogThread.hasStarted = true; // Paper
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 index 690b73f6f990e6117927babc6012d95d442dd5e4..9cc5018ebcc9e5e4c502a33c101e9ce96ea8de7c 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java

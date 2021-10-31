@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Tue, 26 Oct 2021 21:16:56 +0200
+Subject: [PATCH] Add an API for the server system
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index a50fc34d387653cb13995eca828e35b6e73a9574..79ec1cdca21e059bd2d40cdea0a3fa26c061e7d5 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -10,6 +10,7 @@ import fr.hygon.yokura.entity.player.ParticleList; // Yokura
+ import fr.hygon.yokura.entity.player.Ranks; // Yokura
+ import io.netty.buffer.Unpooled;
+ import java.io.ByteArrayOutputStream;
++import java.io.DataOutputStream; // Yokura
+ import java.io.IOException;
+ import java.lang.ref.WeakReference;
+ import java.net.InetSocketAddress;
+@@ -344,6 +345,22 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+         getHandle().questionPrompt = questionPrompt; // We must set it AFTER we opened the inventory,
+         // else the quit method will be called if the player had a GUI opened before because it'll close the old GUI and open this one
+     }
++
++    @Override
++    public void sendToServer(@NotNull String server) {
++        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
++        DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
++        try {
++            dataOutputStream.writeUTF("Connect");
++            dataOutputStream.writeUTF(server);
++        } catch (IOException exception) {
++            exception.printStackTrace();
++        }
++
++        ClientboundCustomPayloadPacket packet = new ClientboundCustomPayloadPacket(new ResourceLocation("bungeecord:main"),
++            new FriendlyByteBuf(Unpooled.wrappedBuffer(byteArrayOutputStream.toByteArray())));
++        getHandle().connection.send(packet);
++    }
+     // Yokura end
+ 
+     public GameProfile getProfile() {
