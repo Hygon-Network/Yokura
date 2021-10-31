@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Sun, 31 Oct 2021 21:46:07 +0100
+Subject: [PATCH] Add a way to get heads from base64
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSkull.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSkull.java
+index 7cacc61fed0c610845c67894d1cc68e44f5e46fe..de82faf2672bf9bd513bef2b47dee5ca45a2981a 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSkull.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSkull.java
+@@ -6,6 +6,7 @@ import java.util.Map;
+ import java.util.UUID;
+ import com.destroystokyo.paper.profile.CraftPlayerProfile;
+ import com.destroystokyo.paper.profile.PlayerProfile;
++import com.mojang.authlib.properties.Property;
+ import org.bukkit.Bukkit;
+ import org.bukkit.Material;
+ import org.bukkit.OfflinePlayer;
+@@ -253,4 +254,12 @@ class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
+         }
+         return builder;
+     }
++    // Yokura start
++    @Override
++    public void setBase64(String base64) {
++        GameProfile profile = new GameProfile(UUID.randomUUID(), null);
++        profile.getProperties().put("textures", new Property("textures", base64));
++        setProfile(profile);
++    }
++    // Yokura end
+ }

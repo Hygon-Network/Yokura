@@ -1,0 +1,17 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Sun, 31 Oct 2021 21:46:02 +0100
+Subject: [PATCH] Add a way to get heads from base64
+
+
+diff --git a/src/main/java/org/bukkit/inventory/meta/SkullMeta.java b/src/main/java/org/bukkit/inventory/meta/SkullMeta.java
+index 88d1c889c09adb91abb09a8e43a30c871b217da2..79c1e78149f3bcc70bd62db46684f88397ccf78d 100644
+--- a/src/main/java/org/bukkit/inventory/meta/SkullMeta.java
++++ b/src/main/java/org/bukkit/inventory/meta/SkullMeta.java
+@@ -74,4 +74,6 @@ public interface SkullMeta extends ItemMeta {
+     @Override
+     @NotNull
+     SkullMeta clone();
++    // Yokura start
++    void setBase64(String base64);
+ }
