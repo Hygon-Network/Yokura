@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Sun, 31 Oct 2021 12:57:28 +0100
+Subject: [PATCH] Add a setHealthSafely method
+
+
+diff --git a/src/main/java/org/bukkit/entity/Damageable.java b/src/main/java/org/bukkit/entity/Damageable.java
+index fc4d3bcd9b16097086fef7975274d825b65adb10..7dcbde4e1e3ad84ce656254fff6252419d9bf63d 100644
+--- a/src/main/java/org/bukkit/entity/Damageable.java
++++ b/src/main/java/org/bukkit/entity/Damageable.java
+@@ -39,6 +39,19 @@ public interface Damageable extends Entity {
+      *     {@link #getMaxHealth()}
+      */
+     void setHealth(double health);
++    // Yokura start
++
++    /**
++     * Sets the entity's health from 0 to {@link #getMaxHealth()}, where 0 is
++     * dead.
++     *
++     * @param health New health represented from 0 to max
++     * Instead of throwing an IllegalArgumentException like {@link #setHealth(double)}, this method will correct the value depending on the case.
++     * If health < 0 : the health will be set at 0.
++     * If health > {@link #getMaxHealth()} : the health will be set at {@link #getMaxHealth()}.
++     */
++    void setHealthSafely(double health);
++    // Yokura end
+ 
+     /**
+      * Gets the entity's absorption amount.

@@ -1,0 +1,53 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hygon <hygon806@gmail.com>
+Date: Sun, 31 Oct 2021 12:57:21 +0100
+Subject: [PATCH] Add a setHealthSafely method
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEnderDragonPart.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEnderDragonPart.java
+index a407e802164603c74ec1f4ad3c98bc50398954bc..b3dfd18a0828a7d157d42f42678e9f4f0dfd86e4 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEnderDragonPart.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftEnderDragonPart.java
+@@ -45,6 +45,19 @@ public class CraftEnderDragonPart extends CraftComplexPart implements EnderDrago
+         this.getParent().setHealth(health);
+     }
+ 
++    // Yokura start
++    @Override
++    public void setHealthSafely(double health) {
++        if (health < 0) {
++            health = 0;
++        } else if (health > this.getMaxHealth()) {
++            health = this.getMaxHealth();
++        }
++
++        this.setHealth(health);
++    }
++    // Yokura end
++
+     @Override
+     public double getAbsorptionAmount() {
+         return this.getParent().getAbsorptionAmount();
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
+index fe71123dc07cb13ffad8f13e57aa9bda1cb0abf5..23d6f1e0e6db9384b42d719c250b0a16ddc100f8 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
+@@ -122,6 +122,18 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
+             this.getHandle().die(DamageSource.GENERIC);
+         }
+     }
++    // Yokura start
++    @Override
++    public void setHealthSafely(double health) {
++        if (health < 0) {
++            health = 0;
++        } else if (health > this.getMaxHealth()) {
++            health = this.getMaxHealth();
++        }
++
++        this.setHealth(health);
++    }
++    // Yokura end
+ 
+     @Override
+     public double getAbsorptionAmount() {
