@@ -69,7 +69,7 @@ index cd6d278912dcbe310665072d2f70a21626f98f87..fa0e2957dac84215addae1172724f1b2
 +    }
  }
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 6cc6930b85e0d462ad099fae294ad36a1e1abeb3..b5c501b738fe30fe5d628fff60f93bbedd027a76 100644
+index a9d62ab0a5cf983a3dc1ff48c96ddfc7a795050d..1b016e11978067bb225793f6b2146d606ed99ecd 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 @@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
@@ -88,7 +88,7 @@ index 6cc6930b85e0d462ad099fae294ad36a1e1abeb3..b5c501b738fe30fe5d628fff60f93bbe
  import org.bukkit.command.CommandSender;
  import co.aikar.timings.MinecraftTimings; // Paper
  import org.bukkit.event.server.ServerCommandEvent;
-@@ -227,11 +229,25 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -238,11 +240,25 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
          gg.airplane.commands.AirplaneCommands.init(); // Airplane - command
          // Yokura start
          try {
@@ -116,7 +116,7 @@ index 6cc6930b85e0d462ad099fae294ad36a1e1abeb3..b5c501b738fe30fe5d628fff60f93bbe
  
          this.setPvpAllowed(dedicatedserverproperties.pvp);
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index ad9fb50791779a5fe7d22268b71bd10d9c9ff3f0..b185f67bc1ad0df3b1461808a52cac9df01a3ed9 100644
+index eaa005c1c9b4386bcdbe1d6eb28c3eca7635066c..8823849d1ecdf48827e585db8801899609afba5d 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -730,7 +730,7 @@ public abstract class PlayerList {
@@ -129,7 +129,7 @@ index ad9fb50791779a5fe7d22268b71bd10d9c9ff3f0..b185f67bc1ad0df3b1461808a52cac9d
          PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.getRawAddress()).getAddress());
  
 diff --git a/src/main/resources/log4j2.xml b/src/main/resources/log4j2.xml
-index 5704146ae84747cafd4b5f504ba071f6be99f425..d87350a95e3048e18610ade1d776c504ea1a2dd5 100644
+index 74ccc67e3c12dc5182602fb691ef3ddeb5b53280..f3b93fb9d5f602aefa761cf477b56e0c8828ef1b 100644
 --- a/src/main/resources/log4j2.xml
 +++ b/src/main/resources/log4j2.xml
 @@ -50,5 +50,6 @@

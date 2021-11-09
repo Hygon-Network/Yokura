@@ -5,7 +5,7 @@ Subject: [PATCH] Add QuestionPrompt utility
 
 
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 3c5593661e59ee8cd98b3ce6164a9e5a197877a3..4bb87723b1eef11215128a0c34d57a32c9f39dde 100644
+index c0af910c33a535c59f906ab6f7e361e908114112..480eb41c27ef6fd787fc46ed3a17aa670047b8fb 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -278,6 +278,8 @@ public class ServerPlayer extends Player {
@@ -18,10 +18,10 @@ index 3c5593661e59ee8cd98b3ce6164a9e5a197877a3..4bb87723b1eef11215128a0c34d57a32
  
      public ServerPlayer(MinecraftServer server, ServerLevel world, GameProfile profile, ServerLoginPacketListenerImpl loginPacketListener) { // Yokura - add loginPacketListener
 diff --git a/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-index 5d7c47b0a302f7db95a0b2bb811c5656c6b02beb..815de6e87fd322c1832e2be08e16399dfe7d5f99 100644
+index 744f7b717f14a070d5a4be0b35e7f422694fb407..c8c567077f70e9d465949105064f57a0f11d59f0 100644
 --- a/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-@@ -1950,6 +1950,12 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
+@@ -1955,6 +1955,12 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
              this.processedDisconnect = true;
          }
          // CraftBukkit end
@@ -34,7 +34,7 @@ index 5d7c47b0a302f7db95a0b2bb811c5656c6b02beb..815de6e87fd322c1832e2be08e16399d
          ServerGamePacketListenerImpl.LOGGER.info("{} lost connection: {}", this.player.getName().getString(), reason.getString());
          // CraftBukkit start - Replace vanilla quit message handling with our own.
          /*
-@@ -2570,7 +2576,14 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
+@@ -2575,7 +2581,14 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
          PacketUtils.ensureRunningOnSameThread(packetplayinclosewindow, this, this.player.getLevel());
  
          if (this.player.isImmobile()) return; // CraftBukkit
@@ -50,7 +50,7 @@ index 5d7c47b0a302f7db95a0b2bb811c5656c6b02beb..815de6e87fd322c1832e2be08e16399d
  
          this.player.doCloseContainer();
      }
-@@ -2771,6 +2784,26 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
+@@ -2776,6 +2789,26 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
                      if (click == ClickType.NUMBER_KEY) {
                          event = new InventoryClickEvent(inventory, type, packet.getSlotNum(), click, action, packet.getButtonNum());
                      } else {
@@ -78,7 +78,7 @@ index 5d7c47b0a302f7db95a0b2bb811c5656c6b02beb..815de6e87fd322c1832e2be08e16399d
                      }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index fe83bb8458dbdcecfa9255457561629534421889..a50fc34d387653cb13995eca828e35b6e73a9574 100644
+index c31f55a1da2100d060743a2dba7dfab2acad28b4..038f9f36804f5c2049ab9d47e55c539ec210258e 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -308,6 +308,42 @@ public class CraftPlayer extends CraftHumanEntity implements Player {

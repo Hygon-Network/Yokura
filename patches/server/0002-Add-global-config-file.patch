@@ -101,10 +101,10 @@ index 0000000000000000000000000000000000000000..cd6d278912dcbe310665072d2f70a216
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 2a569d05edf0f5337afbcd6803c0513d338ca55e..6cc6930b85e0d462ad099fae294ad36a1e1abeb3 100644
+index e2901132b78126c0a4eb04363dfe6a0dccd1313f..a9d62ab0a5cf983a3dc1ff48c96ddfc7a795050d 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -225,6 +225,14 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -236,6 +236,14 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
          // Paper end
          gg.airplane.AirplaneConfig.load(); // Airplane - config
          gg.airplane.commands.AirplaneCommands.init(); // Airplane - command

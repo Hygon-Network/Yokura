@@ -5,7 +5,7 @@ Subject: [PATCH] Add network levels and xp
 
 
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index c699bce3f87295a369af98b0b3e39576956deed4..1fec543f820130b25d63314b1b9de75f19340bed 100644
+index 1042a822de45be54f8d54f03f2d4de904b3f4f03..cd65282a1c49e5c9025f64e8f8ebb4319656d9f7 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -267,6 +267,9 @@ public class ServerPlayer extends Player {
@@ -29,7 +29,7 @@ index c699bce3f87295a369af98b0b3e39576956deed4..1fec543f820130b25d63314b1b9de75f
      }
      // Paper start - Chunk priority
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 076f1e16d1484a299205796fbaa8ae3790757b4d..f5bdff50d25b4f08c7a20b708e6ef16d2c01728a 100644
+index c3c45f9bf4f9a5b982bab0530dc095a854c73123..ebc2cae63f77a2c0d9c88b5feec939390eeb5167 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -73,6 +73,9 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
@@ -42,7 +42,7 @@ index 076f1e16d1484a299205796fbaa8ae3790757b4d..f5bdff50d25b4f08c7a20b708e6ef16d
      // Yokura end
  
      public ServerLoginPacketListenerImpl(MinecraftServer server, Connection connection) {
-@@ -469,17 +472,22 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+@@ -472,17 +475,22 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
  
              playerData = new Document("_id", playerUUID.toString())
                      .append("coins", YokuraGlobalConfig.defaultCoins)
@@ -111,7 +111,7 @@ index c29d70aa855e3580733f2b1ab57827fd95021cd3..83ab92461fba466a512428e077532896
  
      public GameProfile getProfile() {
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 2db6c2542181694f6c70ac6dce67ab79e5ec9337..d50e41ca8cf6e15fb5bf0234569a7f735ce7d333 100644
+index 53401e5307297b4ecac968ea29281bb2ef4d31d3..eb3536d43efdfb4cc19b48ab4cc3869c34da00a0 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -221,6 +221,35 @@ public class CraftPlayer extends CraftHumanEntity implements Player {

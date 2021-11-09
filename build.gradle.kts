@@ -1,7 +1,7 @@
 plugins {
     java
     id("com.github.johnrengelman.shadow") version "7.0.0" apply false
-    id("io.papermc.paperweight.patcher") version "1.1.11"
+    id("io.papermc.paperweight.patcher") version "1.1.14"
 }
 
 repositories {
@@ -41,8 +41,12 @@ subprojects {
 paperweight {
     serverProject.set(project(":Yokura-Server"))
 
-    usePaperUpstream(providers.gradleProperty("paperRef")) {
-        withPaperPatcher {
+    useStandardUpstream("Airplane") {
+        url.set(github("TECHNOVE", "Airplane"))
+        ref.set(providers.gradleProperty("airplaneRef"))
+
+        withStandardPatcher {
+            baseName("Airplane")
             remapRepo.set("https://maven.quiltmc.org/repository/release/")
             decompileRepo.set("https://files.minecraftforge.net/maven/")
 

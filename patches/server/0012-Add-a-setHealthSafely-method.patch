@@ -29,7 +29,7 @@ index a407e802164603c74ec1f4ad3c98bc50398954bc..b3dfd18a0828a7d157d42f42678e9f4f
      public double getAbsorptionAmount() {
          return this.getParent().getAbsorptionAmount();
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
-index fe71123dc07cb13ffad8f13e57aa9bda1cb0abf5..23d6f1e0e6db9384b42d719c250b0a16ddc100f8 100644
+index 4cdc80b31ac56b63df80fefec87e4ba8b4dcf455..62352ed5a57cfbd175388861ebe159a38bcaee44 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
 @@ -122,6 +122,18 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {

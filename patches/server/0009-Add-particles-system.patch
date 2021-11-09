@@ -5,7 +5,7 @@ Subject: [PATCH] Add particles system
 
 
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 0f22124b7555732c3a05b1eee82a18279a11a861..3c5593661e59ee8cd98b3ce6164a9e5a197877a3 100644
+index 3f982a563b8960a5838c7411f9589f761bae0e7c..c0af910c33a535c59f906ab6f7e361e908114112 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
@@ -59,7 +59,7 @@ index 0f22124b7555732c3a05b1eee82a18279a11a861..3c5593661e59ee8cd98b3ce6164a9e5a
              CrashReport crashreport = CrashReport.forThrowable(throwable, "Ticking player");
              CrashReportCategory crashreportsystemdetails = crashreport.addCategory("Player being ticked");
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index b006c645bab4f386de13fde00f530235d5129b69..c4d526403587b6982b480a7ee3fea4e3534cb95a 100644
+index e43f523412534e093cc58741d817e10508a1a849..a01e501410bedfa1fec8a4e19ee22cc773562eb3 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -20,6 +20,7 @@ import javax.crypto.Cipher;
@@ -80,7 +80,7 @@ index b006c645bab4f386de13fde00f530235d5129b69..c4d526403587b6982b480a7ee3fea4e3
      // Yokura end
  
      public ServerLoginPacketListenerImpl(MinecraftServer server, Connection connection) {
-@@ -480,13 +484,17 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+@@ -483,13 +487,17 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
                      .append("tokens", YokuraGlobalConfig.defaultTokens)
                      .append("xp", 0)
                      .append("level", 0)
@@ -99,7 +99,7 @@ index b006c645bab4f386de13fde00f530235d5129b69..c4d526403587b6982b480a7ee3fea4e3
  
              YokuraAPI.getMongoDatabase().getCollection("players").insertOne(playerData);
              ServerLoginPacketListenerImpl.LOGGER.info("Profile for the player " + playerName + " created! (Took " + (System.currentTimeMillis() - startTime) + "ms).");
-@@ -496,6 +504,10 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+@@ -499,6 +507,10 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
              networkXP = playerData.getInteger("xp");
              networkLevel = playerData.getInteger("level");
              playerData.getList("ranks", Integer.class).forEach(power -> ranks.add(Ranks.getRankFromPower(power)));
@@ -111,7 +111,7 @@ index b006c645bab4f386de13fde00f530235d5129b69..c4d526403587b6982b480a7ee3fea4e3
      }
      // Yokura end
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 36e2a7de001dbb7e890ca4c128c02297219e41fb..fe83bb8458dbdcecfa9255457561629534421889 100644
+index 516105baf7f0b69b6b04189bb6bddfadd7342b3b..c31f55a1da2100d060743a2dba7dfab2acad28b4 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;

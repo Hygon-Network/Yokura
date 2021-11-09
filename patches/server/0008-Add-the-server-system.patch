@@ -5,7 +5,7 @@ Subject: [PATCH] Add the server system
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/PaperConfig.java b/src/main/java/com/destroystokyo/paper/PaperConfig.java
-index 3cb9e223c90f97aa106ee1e9512d33897a6bac1a..a363f21584ee364e1ea0d4d4f938647bb84023ae 100644
+index 6a30338648214c98b05feb5a628dbdc6b2683ff9..3c8579e30b2e27b9c2284f87a76e88f1684921b4 100644
 --- a/src/main/java/com/destroystokyo/paper/PaperConfig.java
 +++ b/src/main/java/com/destroystokyo/paper/PaperConfig.java
 @@ -369,9 +369,11 @@ public class PaperConfig {
@@ -101,7 +101,7 @@ index 50f01885e9e1149324da157a41c58f72ae927a42..845c8a18bcf9e1029610b5e344c6da84
          this.message = message;
      }
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 001797b2bbeb47deabce4ef7788e13834ff6f13f..d39ebe1f4c3bf1eff4e50f6cab54358d6c476a38 100644
+index b35bacea0fa1f7a65a98b286c6747bba25df0ca8..3b4168d3bf5f07a2dde5ea8720029cd6618eefef 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -12,6 +12,7 @@ import com.mojang.authlib.GameProfile;
@@ -112,7 +112,7 @@ index 001797b2bbeb47deabce4ef7788e13834ff6f13f..d39ebe1f4c3bf1eff4e50f6cab54358d
  import io.papermc.paper.adventure.PaperAdventure; // Paper
  import it.unimi.dsi.fastutil.longs.LongIterator;
  import java.awt.GraphicsEnvironment;
-@@ -1039,6 +1040,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1044,6 +1045,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
          // Paper end
          // CraftBukkit end
          MinecraftServer.LOGGER.info("Stopping server");
@@ -120,7 +120,7 @@ index 001797b2bbeb47deabce4ef7788e13834ff6f13f..d39ebe1f4c3bf1eff4e50f6cab54358d
          MinecraftTimings.stopServer(); // Paper
          // CraftBukkit start
          if (this.server != null) {
-@@ -1226,6 +1228,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1231,6 +1233,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                  String doneTime = String.format(java.util.Locale.ROOT, "%.3fs", (double) (Util.getNanos() - serverStartTime) / 1.0E9D);
                  LOGGER.info("Done ({})! For help, type \"help\"", doneTime);
                  // Paper end
@@ -129,7 +129,7 @@ index 001797b2bbeb47deabce4ef7788e13834ff6f13f..d39ebe1f4c3bf1eff4e50f6cab54358d
                  org.spigotmc.WatchdogThread.tick(); // Paper
                  org.spigotmc.WatchdogThread.hasStarted = true; // Paper
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 690b73f6f990e6117927babc6012d95d442dd5e4..9cc5018ebcc9e5e4c502a33c101e9ce96ea8de7c 100644
+index 9275e2d880909bbae0cd7a0dff82fac1ffd97cf8..157625ffa7cd2d0052401a75d3b7e8e290a54dc6 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 @@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
@@ -140,7 +140,7 @@ index 690b73f6f990e6117927babc6012d95d442dd5e4..9cc5018ebcc9e5e4c502a33c101e9ce9
  import fr.hygon.yokura.broker.YokuraBroker; // Yokura
  import fr.hygon.yokura.config.YokuraGlobalConfig; // Yokura
  import net.minecraft.DefaultUncaughtExceptionHandler;
-@@ -248,13 +249,23 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -259,13 +260,23 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
              return false;
          }
  

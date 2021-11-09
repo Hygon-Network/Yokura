@@ -5,7 +5,7 @@ Subject: [PATCH] Add Ranks
 
 
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 1fec543f820130b25d63314b1b9de75f19340bed..62fd2da6c8b9e37c4f5fc8a0b6dd2d30f4d47ff2 100644
+index cd65282a1c49e5c9025f64e8f8ebb4319656d9f7..3f982a563b8960a5838c7411f9589f761bae0e7c 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -14,6 +14,7 @@ import java.util.OptionalInt;
@@ -34,7 +34,7 @@ index 1fec543f820130b25d63314b1b9de75f19340bed..62fd2da6c8b9e37c4f5fc8a0b6dd2d30
      }
      // Paper start - Chunk priority
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index f5bdff50d25b4f08c7a20b708e6ef16d2c01728a..b006c645bab4f386de13fde00f530235d5129b69 100644
+index ebc2cae63f77a2c0d9c88b5feec939390eeb5167..e43f523412534e093cc58741d817e10508a1a849 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -10,6 +10,8 @@ import java.net.InetSocketAddress;
@@ -63,7 +63,7 @@ index f5bdff50d25b4f08c7a20b708e6ef16d2c01728a..b006c645bab4f386de13fde00f530235
      // Yokura end
  
      public ServerLoginPacketListenerImpl(MinecraftServer server, Connection connection) {
-@@ -474,12 +479,14 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+@@ -477,12 +482,14 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
                      .append("coins", YokuraGlobalConfig.defaultCoins)
                      .append("tokens", YokuraGlobalConfig.defaultTokens)
                      .append("xp", 0)
@@ -79,7 +79,7 @@ index f5bdff50d25b4f08c7a20b708e6ef16d2c01728a..b006c645bab4f386de13fde00f530235
  
              YokuraAPI.getMongoDatabase().getCollection("players").insertOne(playerData);
              ServerLoginPacketListenerImpl.LOGGER.info("Profile for the player " + playerName + " created! (Took " + (System.currentTimeMillis() - startTime) + "ms).");
-@@ -488,6 +495,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+@@ -491,6 +498,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
              tokens = playerData.getDouble("tokens");
              networkXP = playerData.getInteger("xp");
              networkLevel = playerData.getInteger("level");
@@ -137,7 +137,7 @@ index 83ab92461fba466a512428e077532896a9a2cf46..ad66a7a78d0ad5526d9ed6b1dc47cef1
  
      public GameProfile getProfile() {
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index d50e41ca8cf6e15fb5bf0234569a7f735ce7d333..e93de61ba7cc11d9ff762f585f677e5a484069fa 100644
+index eb3536d43efdfb4cc19b48ab4cc3869c34da00a0..516105baf7f0b69b6b04189bb6bddfadd7342b3b 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;

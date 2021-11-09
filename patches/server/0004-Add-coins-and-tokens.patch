@@ -24,7 +24,7 @@ index fa0e2957dac84215addae1172724f1b232534da1..b92672eebf9b815c51552651cc2dee7c
 +    }
  }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 6d2d2ba4a83d887f4d52188305a4a28c2ee2f014..c699bce3f87295a369af98b0b3e39576956deed4 100644
+index 78fda0c982810b8b881a87099f355247566e513a..1042a822de45be54f8d54f03f2d4de904b3f4f03 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -75,6 +75,7 @@ import net.minecraft.resources.ResourceLocation;
@@ -62,7 +62,7 @@ index 6d2d2ba4a83d887f4d52188305a4a28c2ee2f014..c699bce3f87295a369af98b0b3e39576
      // Paper start - Chunk priority
      public BlockPos getPointInFront(double inFront) {
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 01fee879c946b6640da34d5890d686f0152437dc..076f1e16d1484a299205796fbaa8ae3790757b4d 100644
+index 494ca8fa8c742d4eac9fb11878d3b3170d850265..c3c45f9bf4f9a5b982bab0530dc095a854c73123 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
@@ -95,7 +95,7 @@ index 01fee879c946b6640da34d5890d686f0152437dc..076f1e16d1484a299205796fbaa8ae37
  
      public ServerLoginPacketListenerImpl(MinecraftServer server, Connection connection) {
          this.state = ServerLoginPacketListenerImpl.State.HELLO;
-@@ -393,6 +402,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+@@ -396,6 +405,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
                          }
                          // CraftBukkit end
                          ServerLoginPacketListenerImpl.LOGGER.info("UUID of player {} is {}", ServerLoginPacketListenerImpl.this.gameProfile.getName(), ServerLoginPacketListenerImpl.this.gameProfile.getId());
@@ -103,7 +103,7 @@ index 01fee879c946b6640da34d5890d686f0152437dc..076f1e16d1484a299205796fbaa8ae37
                          ServerLoginPacketListenerImpl.this.state = ServerLoginPacketListenerImpl.State.READY_TO_ACCEPT;
          }
      }
-@@ -442,6 +452,37 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+@@ -445,6 +455,37 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
          return new GameProfile(uuid, profile.getName());
      }
  
@@ -213,7 +213,7 @@ index b20bfe5ab165bf86985e5ff2f93f415d9710e0e4..c29d70aa855e3580733f2b1ab57827fd
          return this.profile;
      }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 1ccbdd2554073a41ca2f37deca3f1ec3e6a0665f..2db6c2542181694f6c70ac6dce67ab79e5ec9337 100644
+index 755e3bcc4d620d5550cbfd7ba56e83816d270498..53401e5307297b4ecac968ea29281bb2ef4d31d3 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
