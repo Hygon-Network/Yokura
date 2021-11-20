@@ -35,7 +35,7 @@ index 12b116cf95cc4e6f993642edd2bdd5052c17cd4a..567ced5aaea9c0e6014ceff50fdfcc2b
  }
 \ No newline at end of file
 diff --git a/src/main/java/fr/hygon/yokura/YokuraAPI.java b/src/main/java/fr/hygon/yokura/YokuraAPI.java
-index bcab85bfcd2770f221da84f6f4396010e4c3da92..5ce1e694d3f12914791da70618c8c341f115f1cf 100644
+index 7cce73b1cebd4b3be34b51d307ab33fc09eef86b..9513449ff782cf5cd40734e65317e5556e0304e2 100644
 --- a/src/main/java/fr/hygon/yokura/YokuraAPI.java
 +++ b/src/main/java/fr/hygon/yokura/YokuraAPI.java
 @@ -3,6 +3,7 @@ package fr.hygon.yokura;
@@ -46,7 +46,7 @@ index bcab85bfcd2770f221da84f6f4396010e4c3da92..5ce1e694d3f12914791da70618c8c341
  
  public class YokuraAPI {
      private static IYokuraAPI instance;
-@@ -43,4 +44,21 @@ public class YokuraAPI {
+@@ -50,4 +51,21 @@ public class YokuraAPI {
      public static void publish(Message message) {
          instance.publish(message);
      }

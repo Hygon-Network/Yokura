@@ -29,7 +29,7 @@ index ff3658c487a52502dc9a529b3d92a67eb8cc7513..12b116cf95cc4e6f993642edd2bdd505
  }
 \ No newline at end of file
 diff --git a/src/main/java/fr/hygon/yokura/YokuraAPI.java b/src/main/java/fr/hygon/yokura/YokuraAPI.java
-index 52e5ad87b52a221cfb12b8157d170b0249c1e4d4..bcab85bfcd2770f221da84f6f4396010e4c3da92 100644
+index ea3204863ee6681c70e7735dc4aa45f8903ea5b8..7cce73b1cebd4b3be34b51d307ab33fc09eef86b 100644
 --- a/src/main/java/fr/hygon/yokura/YokuraAPI.java
 +++ b/src/main/java/fr/hygon/yokura/YokuraAPI.java
 @@ -2,6 +2,7 @@ package fr.hygon.yokura;
@@ -40,7 +40,7 @@ index 52e5ad87b52a221cfb12b8157d170b0249c1e4d4..bcab85bfcd2770f221da84f6f4396010
  
  public class YokuraAPI {
      private static IYokuraAPI instance;
-@@ -34,4 +35,12 @@ public class YokuraAPI {
+@@ -41,4 +42,12 @@ public class YokuraAPI {
      public static MongoDatabase getMongoDatabase() {
          return instance.getMongoDatabase();
      }
