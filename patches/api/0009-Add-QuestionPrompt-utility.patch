@@ -42,10 +42,10 @@ index 0000000000000000000000000000000000000000..cf5d5a077ae9be33e1616bc7d1ef2c4f
 +    }
 +}
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index 7ac475138700199f1fd7c4e2453d4b205e1e719f..ca9f705de17b9d6e6d75d2f2739061ca7b0ba08d 100644
+index bb74a69f49e602e9fe9dc505e8370e1d14440a39..c6bb2cd973d5c5374c935f4d26c741dd8454b924 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
-@@ -78,6 +78,14 @@ public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginM
+@@ -79,6 +79,14 @@ public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginM
       */
      @NotNull
      List<ParticleList> getBoughtParticles();

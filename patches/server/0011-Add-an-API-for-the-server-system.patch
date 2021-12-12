@@ -5,10 +5,10 @@ Subject: [PATCH] Add an API for the server system
 
 
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 038f9f36804f5c2049ab9d47e55c539ec210258e..8d36b6c1683c8bb493e4205e324a43c644f03db0 100644
+index 407f6db6bdb6fc9cd60dc293452e93d084f5ce9b..9915efa054bad7073afc67745c5a9cef948b6f5b 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -10,6 +10,7 @@ import fr.hygon.yokura.entity.player.ParticleList; // Yokura
+@@ -11,6 +11,7 @@ import fr.hygon.yokura.entity.player.ParticleList; // Yokura
  import fr.hygon.yokura.entity.player.Ranks; // Yokura
  import io.netty.buffer.Unpooled;
  import java.io.ByteArrayOutputStream;
@@ -16,7 +16,7 @@ index 038f9f36804f5c2049ab9d47e55c539ec210258e..8d36b6c1683c8bb493e4205e324a43c6
  import java.io.IOException;
  import java.lang.ref.WeakReference;
  import java.net.InetSocketAddress;
-@@ -344,6 +345,22 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -349,6 +350,22 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          getHandle().questionPrompt = questionPrompt; // We must set it AFTER we opened the inventory,
          // else the quit method will be called if the player had a GUI opened before because it'll close the old GUI and open this one
      }

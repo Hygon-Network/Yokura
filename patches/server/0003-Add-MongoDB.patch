@@ -69,10 +69,10 @@ index cd6d278912dcbe310665072d2f70a21626f98f87..fa0e2957dac84215addae1172724f1b2
 +    }
  }
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index a9d62ab0a5cf983a3dc1ff48c96ddfc7a795050d..1b016e11978067bb225793f6b2146d606ed99ecd 100644
+index 739e5a71410f5e82a1d3085dc80812d62a602a73..056972869403c41b80a56f57fbc802a1f78853b6 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
+@@ -21,6 +21,7 @@ import java.util.Locale;
  import java.util.function.BooleanSupplier;
  import java.util.regex.Pattern;
  import javax.annotation.Nullable;
@@ -80,16 +80,8 @@ index a9d62ab0a5cf983a3dc1ff48c96ddfc7a795050d..1b016e11978067bb225793f6b2146d60
  import net.minecraft.DefaultUncaughtExceptionHandler;
  import net.minecraft.DefaultUncaughtExceptionHandlerWithName;
  import net.minecraft.SharedConstants;
-@@ -66,6 +67,7 @@ import org.apache.logging.log4j.LogManager;
- import org.apache.logging.log4j.Logger;
- import org.apache.logging.log4j.Level;
- import org.apache.logging.log4j.io.IoBuilder;
-+import org.bson.Document; // Yokura
- import org.bukkit.command.CommandSender;
- import co.aikar.timings.MinecraftTimings; // Paper
- import org.bukkit.event.server.ServerCommandEvent;
-@@ -238,11 +240,25 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
-         gg.airplane.commands.AirplaneCommands.init(); // Airplane - command
+@@ -235,11 +236,25 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+ 
          // Yokura start
          try {
 -            fr.hygon.yokura.config.YokuraGlobalConfig.init((java.io.File) options.valueOf("yokura-global-settings"));
@@ -104,7 +96,7 @@ index a9d62ab0a5cf983a3dc1ff48c96ddfc7a795050d..1b016e11978067bb225793f6b2146d60
 +        com.mongodb.client.MongoDatabase mongoDatabase = mongoClient.getDatabase(YokuraGlobalConfig.mongoDatabase);
 +
 +        try {
-+            mongoClient.getDatabase("admin").runCommand(new Document("ping", 1));
++            mongoClient.getDatabase("admin").runCommand(new org.bson.Document("ping", 1));
 +            DedicatedServer.LOGGER.info("Connected to the MongoDB server.");
 +        } catch (Exception exception) {
 +            DedicatedServer.LOGGER.error("Couldn't connect to the MongoDB server.", exception);
@@ -116,10 +108,10 @@ index a9d62ab0a5cf983a3dc1ff48c96ddfc7a795050d..1b016e11978067bb225793f6b2146d60
  
          this.setPvpAllowed(dedicatedserverproperties.pvp);
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index eaa005c1c9b4386bcdbe1d6eb28c3eca7635066c..8823849d1ecdf48827e585db8801899609afba5d 100644
+index 042be2cf60a9d01698808d84f2e537a5eb952079..3dfe850e90f2ec49266266dce24346d51e230e5a 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -730,7 +730,7 @@ public abstract class PlayerList {
+@@ -728,7 +728,7 @@ public abstract class PlayerList {
          // depending on the outcome.
          SocketAddress socketaddress = loginlistener.connection.getRemoteAddress();
  

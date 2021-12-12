@@ -5,10 +5,10 @@ Subject: [PATCH] Add network levels and xp
 
 
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 1042a822de45be54f8d54f03f2d4de904b3f4f03..cd65282a1c49e5c9025f64e8f8ebb4319656d9f7 100644
+index 79d9309490450fc4e6dce039cf48a13b7b082957..fb6db113fcaae9399d401bb15a1ac25f096649f5 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -267,6 +267,9 @@ public class ServerPlayer extends Player {
+@@ -262,6 +262,9 @@ public class ServerPlayer extends Player {
      // Yokura start
      public double coins;
      public double tokens;
@@ -18,7 +18,7 @@ index 1042a822de45be54f8d54f03f2d4de904b3f4f03..cd65282a1c49e5c9025f64e8f8ebb431
      // Yokura end
  
      public ServerPlayer(MinecraftServer server, ServerLevel world, GameProfile profile, ServerLoginPacketListenerImpl loginPacketListener) { // Yokura - add loginPacketListener
-@@ -343,6 +346,9 @@ public class ServerPlayer extends Player {
+@@ -339,6 +342,9 @@ public class ServerPlayer extends Player {
          // Yokura start
          coins = loginPacketListener.coins;
          tokens = loginPacketListener.tokens;
@@ -29,7 +29,7 @@ index 1042a822de45be54f8d54f03f2d4de904b3f4f03..cd65282a1c49e5c9025f64e8f8ebb431
      }
      // Paper start - Chunk priority
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index c3c45f9bf4f9a5b982bab0530dc095a854c73123..ebc2cae63f77a2c0d9c88b5feec939390eeb5167 100644
+index 1a015e5638cc8ae34ee31ab28226302a2ebe4566..3d31810317f80877dd4be3c1688caad0e9356006 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -73,6 +73,9 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
@@ -42,7 +42,7 @@ index c3c45f9bf4f9a5b982bab0530dc095a854c73123..ebc2cae63f77a2c0d9c88b5feec93939
      // Yokura end
  
      public ServerLoginPacketListenerImpl(MinecraftServer server, Connection connection) {
-@@ -472,17 +475,22 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+@@ -473,10 +476,14 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
  
              playerData = new Document("_id", playerUUID.toString())
                      .append("coins", YokuraGlobalConfig.defaultCoins)
@@ -57,8 +57,8 @@ index c3c45f9bf4f9a5b982bab0530dc095a854c73123..ebc2cae63f77a2c0d9c88b5feec93939
 +            networkLevel = 0;
  
              YokuraAPI.getMongoDatabase().getCollection("players").insertOne(playerData);
--
-             ServerLoginPacketListenerImpl.LOGGER.info("Profile for the player " + playerName + " created! (Took " + (System.currentTimeMillis() - startTime) + "ms).");
+ 
+@@ -484,6 +491,8 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
          } else {
              coins = playerData.getDouble("coins");
              tokens = playerData.getDouble("tokens");
@@ -68,7 +68,7 @@ index c3c45f9bf4f9a5b982bab0530dc095a854c73123..ebc2cae63f77a2c0d9c88b5feec93939
      }
      // Yokura end
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index c29d70aa855e3580733f2b1ab57827fd95021cd3..83ab92461fba466a512428e077532896a9a2cf46 100644
+index 9796e52613fdb2205bf1ff02c0256ad47f5c0e21..b9ffeabda777cec90489e1c8a2f39df74663c3ab 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 @@ -88,6 +88,38 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
@@ -111,10 +111,10 @@ index c29d70aa855e3580733f2b1ab57827fd95021cd3..83ab92461fba466a512428e077532896
  
      public GameProfile getProfile() {
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 53401e5307297b4ecac968ea29281bb2ef4d31d3..eb3536d43efdfb4cc19b48ab4cc3869c34da00a0 100644
+index de9259c4488f7bdd4d041425ec12b02ee2e4b633..eead33c7acaf1342885eb0102cbc2c64a7fa0baf 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -221,6 +221,35 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -226,7 +226,37 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public boolean hasEnoughTokens(double tokens) {
          return getTokens() >= tokens;
      }
@@ -148,5 +148,7 @@ index 53401e5307297b4ecac968ea29281bb2ef4d31d3..eb3536d43efdfb4cc19b48ab4cc3869c
 +        MongoUtils.updateValueAsync("players", getUniqueId().toString(), "xp", newXp);
 +    }
      // Yokura end
- 
++
      public GameProfile getProfile() {
+         return this.getHandle().getGameProfile();
+     }

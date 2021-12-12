@@ -101,13 +101,13 @@ index 0000000000000000000000000000000000000000..cd6d278912dcbe310665072d2f70a216
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index e2901132b78126c0a4eb04363dfe6a0dccd1313f..a9d62ab0a5cf983a3dc1ff48c96ddfc7a795050d 100644
+index 38a0fb9a7c4ade9cacfd30dffabfea7e6b773981..739e5a71410f5e82a1d3085dc80812d62a602a73 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -236,6 +236,14 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -233,6 +233,15 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         io.papermc.paper.brigadier.PaperBrigadierProviderImpl.INSTANCE.getClass(); // init PaperBrigadierProvider
          // Paper end
-         gg.airplane.AirplaneConfig.load(); // Airplane - config
-         gg.airplane.commands.AirplaneCommands.init(); // Airplane - command
+ 
 +        // Yokura start
 +        try {
 +            fr.hygon.yokura.config.YokuraGlobalConfig.init((java.io.File) options.valueOf("yokura-global-settings"));
@@ -116,16 +116,17 @@ index e2901132b78126c0a4eb04363dfe6a0dccd1313f..a9d62ab0a5cf983a3dc1ff48c96ddfc7
 +            return false;
 +        }
 +        // Yokura end
- 
++
          this.setPvpAllowed(dedicatedserverproperties.pvp);
          this.setFlightAllowed(dedicatedserverproperties.allowFlight);
+         this.setResourcePack(dedicatedserverproperties.resourcePack, this.getPackHash());
 diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
-index 22e9dd17f62103c5061435099ce96a3d70d54808..47ebe05630738e09094a583d1bf37c8ee566521a 100644
+index 55bae3efbc630be6d40d415509de4c3e744a5004..55eae4684069ea27bd1763ea93b85f8fb6d2fb8c 100644
 --- a/src/main/java/org/bukkit/craftbukkit/Main.java
 +++ b/src/main/java/org/bukkit/craftbukkit/Main.java
 @@ -160,6 +160,13 @@ public class Main {
-                         .defaultsTo(new File[] {})
-                         .describedAs("Jar file");
+                         .defaultsTo("Unknown Server")
+                         .describedAs("Name");
                  // Paper end
 +                // Yokura start
 +                accepts("yokura-global-settings")

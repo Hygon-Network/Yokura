@@ -5,10 +5,10 @@ Subject: [PATCH] Add the server system
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/PaperConfig.java b/src/main/java/com/destroystokyo/paper/PaperConfig.java
-index 6a30338648214c98b05feb5a628dbdc6b2683ff9..3c8579e30b2e27b9c2284f87a76e88f1684921b4 100644
+index cd918cec00d8202252af0d20b1a8891371c538e3..fa620f840c8a7e819a961bebc7bd9f23dd5012ac 100644
 --- a/src/main/java/com/destroystokyo/paper/PaperConfig.java
 +++ b/src/main/java/com/destroystokyo/paper/PaperConfig.java
-@@ -369,9 +369,11 @@ public class PaperConfig {
+@@ -389,9 +389,11 @@ public class PaperConfig {
          autoRecipeLimit = getInt("settings.spam-limiter.recipe-spam-limit", autoRecipeLimit);
      }
  
@@ -22,7 +22,7 @@ index 6a30338648214c98b05feb5a628dbdc6b2683ff9..3c8579e30b2e27b9c2284f87a76e88f1
      private static void velocitySupport() {
          velocitySupport = getBoolean("settings.velocity-support.enabled", false);
          velocityOnlineMode = getBoolean("settings.velocity-support.online-mode", false);
-@@ -382,6 +384,8 @@ public class PaperConfig {
+@@ -402,6 +404,8 @@ public class PaperConfig {
              velocitySecretKey = secret.getBytes(StandardCharsets.UTF_8);
          }
      }
@@ -101,38 +101,39 @@ index 50f01885e9e1149324da157a41c58f72ae927a42..845c8a18bcf9e1029610b5e344c6da84
          this.message = message;
      }
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index b35bacea0fa1f7a65a98b286c6747bba25df0ca8..3b4168d3bf5f07a2dde5ea8720029cd6618eefef 100644
+index fd9d76acc58d753a22562270e2343df6f25e4a30..ca1901dda68fa4880a7cfd6b4db312fcb1ff7178 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -12,6 +12,7 @@ import com.mojang.authlib.GameProfile;
+@@ -12,6 +12,8 @@ import com.mojang.authlib.GameProfile;
  import com.mojang.authlib.GameProfileRepository;
  import com.mojang.authlib.minecraft.MinecraftSessionService;
  import com.mojang.datafixers.DataFixer;
++import fr.hygon.yokura.YokuraAPI; // Yokura
 +import fr.hygon.yokura.servers.Status; // Yokura
  import io.papermc.paper.adventure.PaperAdventure; // Paper
  import it.unimi.dsi.fastutil.longs.LongIterator;
- import java.awt.GraphicsEnvironment;
-@@ -1044,6 +1045,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+ import java.awt.image.BufferedImage;
+@@ -1030,6 +1032,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
          // Paper end
          // CraftBukkit end
          MinecraftServer.LOGGER.info("Stopping server");
-+        fr.hygon.yokura.YokuraAPI.setStatus(fr.hygon.yokura.servers.Status.STOPPING); // Yokura
++        YokuraAPI.setStatus(fr.hygon.yokura.servers.Status.STOPPING); // Yokura
          MinecraftTimings.stopServer(); // Paper
          // CraftBukkit start
          if (this.server != null) {
-@@ -1231,6 +1233,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1216,6 +1219,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                  String doneTime = String.format(java.util.Locale.ROOT, "%.3fs", (double) (Util.getNanos() - serverStartTime) / 1.0E9D);
                  LOGGER.info("Done ({})! For help, type \"help\"", doneTime);
                  // Paper end
-+                fr.hygon.yokura.YokuraAPI.setStatus(Status.WAITING_PLAYERS); // Yokura
++                YokuraAPI.setStatus(Status.WAITING_PLAYERS); // Yokura
  
                  org.spigotmc.WatchdogThread.tick(); // Paper
                  org.spigotmc.WatchdogThread.hasStarted = true; // Paper
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 9275e2d880909bbae0cd7a0dff82fac1ffd97cf8..157625ffa7cd2d0052401a75d3b7e8e290a54dc6 100644
+index f281412f298f98e4b292596c67c1d22b8c219d57..0dfd3c3901bd8ee6f5afc6dc1f22c5d976a7168d 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
+@@ -21,6 +21,7 @@ import java.util.Locale;
  import java.util.function.BooleanSupplier;
  import java.util.regex.Pattern;
  import javax.annotation.Nullable;
@@ -140,7 +141,7 @@ index 9275e2d880909bbae0cd7a0dff82fac1ffd97cf8..157625ffa7cd2d0052401a75d3b7e8e2
  import fr.hygon.yokura.broker.YokuraBroker; // Yokura
  import fr.hygon.yokura.config.YokuraGlobalConfig; // Yokura
  import net.minecraft.DefaultUncaughtExceptionHandler;
-@@ -259,13 +260,23 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -255,13 +256,23 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
              return false;
          }
  
@@ -166,7 +167,7 @@ index 9275e2d880909bbae0cd7a0dff82fac1ffd97cf8..157625ffa7cd2d0052401a75d3b7e8e2
  
          this.setPvpAllowed(dedicatedserverproperties.pvp);
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServerProperties.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServerProperties.java
-index 0544ac93513d3a274bfb53bb6120bd598f4d603b..597d83d6bfcf31628af4748209ad9f8002087f76 100644
+index f944e6beafc7876ed9c6923a22f58d82967b77cb..9d7d01553f7cc47c5eb6071bd286ec39857459ba 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServerProperties.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServerProperties.java
 @@ -15,7 +15,7 @@ import net.minecraft.world.level.levelgen.WorldGenSettings;
@@ -179,7 +180,7 @@ index 0544ac93513d3a274bfb53bb6120bd598f4d603b..597d83d6bfcf31628af4748209ad9f80
      public final String serverIp = this.get("server-ip", "");
      public final boolean spawnAnimals = this.get("spawn-animals", true);
 diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
-index 47ebe05630738e09094a583d1bf37c8ee566521a..b0b9c029045dab824fe605ff013d622120618f5a 100644
+index 55eae4684069ea27bd1763ea93b85f8fb6d2fb8c..99451a04282139f16ed25189b0dd0fb49f30cdc7 100644
 --- a/src/main/java/org/bukkit/craftbukkit/Main.java
 +++ b/src/main/java/org/bukkit/craftbukkit/Main.java
 @@ -166,6 +166,10 @@ public class Main {

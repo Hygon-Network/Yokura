@@ -1,29 +1,50 @@
+import io.papermc.paperweight.util.constants.*
+
 plugins {
     java
-    id("com.github.johnrengelman.shadow") version "7.0.0" apply false
-    id("io.papermc.paperweight.patcher") version "1.1.14"
+    `maven-publish`
+    id("com.github.johnrengelman.shadow") version "7.1.0" apply false
+    id("io.papermc.paperweight.patcher") version "1.3.1"
 }
 
 repositories {
     mavenCentral()
     maven("https://papermc.io/repo/repository/maven-public/") {
-        content { onlyForConfigurations("paperclip") }
+        content {
+            onlyForConfigurations(PAPERCLIP_CONFIG)
+        }
     }
 }
 
 dependencies {
-    remapper("org.quiltmc:tiny-remapper:0.4.3:fat")
-    paperclip("io.papermc:paperclip:2.0.1")
+    remapper("net.fabricmc:tiny-remapper:0.7.0:fat")
+    decompiler("net.minecraftforge:forgeflower:1.5.498.22")
+    paperclip("io.papermc:paperclip:3.0.2")
+}
+
+allprojects {
+    apply(plugin = "java")
+    apply(plugin = "maven-publish")
+
+    java {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(17))
+        }
+    }
 }
 
 subprojects {
-    apply(plugin = "java")
-
-    java { toolchain { languageVersion.set(JavaLanguageVersion.of(16)) } }
-
     tasks.withType<JavaCompile>().configureEach {
-        options.encoding = "UTF-8"
-        options.release.set(16)
+        options.encoding = Charsets.UTF_8.name()
+        options.release.set(17)
+    }
+
+    tasks.withType<Javadoc> {
+        options.encoding = Charsets.UTF_8.name()
+    }
+
+    tasks.withType<ProcessResources> {
+        filteringCharset = Charsets.UTF_8.name()
     }
 
     repositories {
@@ -34,26 +55,22 @@ subprojects {
         maven("https://repo.aikar.co/content/groups/aikar")
         maven("https://repo.md-5.net/content/repositories/releases/")
         maven("https://hub.spigotmc.org/nexus/content/groups/public/")
-        maven("https://jitpack.io")
+        maven("https://oss.sonatype.org/content/repositories/snapshots/")
     }
 }
 
 paperweight {
-    serverProject.set(project(":Yokura-Server"))
+    serverProject.set(project(":yokura-server"))
 
-    useStandardUpstream("Airplane") {
-        url.set(github("TECHNOVE", "Airplane"))
-        ref.set(providers.gradleProperty("airplaneRef"))
+    remapRepo.set("https://maven.fabricmc.net/")
+    decompileRepo.set("https://files.minecraftforge.net/maven/")
 
-        withStandardPatcher {
-            baseName("Airplane")
-            remapRepo.set("https://maven.quiltmc.org/repository/release/")
-            decompileRepo.set("https://files.minecraftforge.net/maven/")
-
+    usePaperUpstream(providers.gradleProperty("paperCommit")) {
+        withPaperPatcher {
             apiPatchDir.set(layout.projectDirectory.dir("patches/api"))
-            serverPatchDir.set(layout.projectDirectory.dir("patches/server"))
-
             apiOutputDir.set(layout.projectDirectory.dir("Yokura-API"))
+
+            serverPatchDir.set(layout.projectDirectory.dir("patches/server"))
             serverOutputDir.set(layout.projectDirectory.dir("Yokura-Server"))
         }
     }

@@ -5,17 +5,17 @@ Subject: [PATCH] Add MongoDB
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 92b612126a6bac0b89198a92bbb73b742ec9d064..d12f32e52d90db74d1b612235e5e1cfeab5b78aa 100644
+index 241ee5c98275a4517e040c86355ae6702f8efca1..dd91756ce7501c68c55afcf7c948431450bb5506 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
-@@ -25,6 +25,7 @@ configurations.api {
+@@ -23,6 +23,7 @@ configurations.api {
  
  dependencies {
      // api dependencies are listed transitively to API consumers
 +    api("org.mongodb:mongo-java-driver:3.12.10") // Yokura
      api("commons-lang:commons-lang:2.6")
-     api("com.google.guava:guava:21.0")
-     api("com.google.code.gson:gson:2.8.8") // Paper - bump
+     api("com.google.guava:guava:31.0.1-jre")
+     api("com.google.code.gson:gson:2.8.8")
 diff --git a/src/main/java/fr/hygon/yokura/IYokuraAPI.java b/src/main/java/fr/hygon/yokura/IYokuraAPI.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..ff3658c487a52502dc9a529b3d92a67eb8cc7513

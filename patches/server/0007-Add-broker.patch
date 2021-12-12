@@ -474,10 +474,10 @@ index b92672eebf9b815c51552651cc2dee7cfbc3abfb..7547132521b586f329abe0d51c89b424
      private static void getDefaultCoins() {
          defaultCoins = getDouble("players.default-coins", defaultCoins);
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 1b016e11978067bb225793f6b2146d606ed99ecd..9275e2d880909bbae0cd7a0dff82fac1ffd97cf8 100644
+index 056972869403c41b80a56f57fbc802a1f78853b6..f281412f298f98e4b292596c67c1d22b8c219d57 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
+@@ -21,6 +21,7 @@ import java.util.Locale;
  import java.util.function.BooleanSupplier;
  import java.util.regex.Pattern;
  import javax.annotation.Nullable;
@@ -485,7 +485,7 @@ index 1b016e11978067bb225793f6b2146d606ed99ecd..9275e2d880909bbae0cd7a0dff82fac1
  import fr.hygon.yokura.config.YokuraGlobalConfig; // Yokura
  import net.minecraft.DefaultUncaughtExceptionHandler;
  import net.minecraft.DefaultUncaughtExceptionHandlerWithName;
-@@ -259,6 +260,12 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -255,6 +256,12 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
          }
  
          fr.hygon.yokura.YokuraAPI.setInstance(new fr.hygon.yokura.YokuraAPIServer(mongoClient, mongoDatabase));

@@ -24,10 +24,10 @@ index fa0e2957dac84215addae1172724f1b232534da1..b92672eebf9b815c51552651cc2dee7c
 +    }
  }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 78fda0c982810b8b881a87099f355247566e513a..1042a822de45be54f8d54f03f2d4de904b3f4f03 100644
+index 7b23535a680d2a8534dcb8dd87770f66fb982c13..79d9309490450fc4e6dce039cf48a13b7b082957 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -75,6 +75,7 @@ import net.minecraft.resources.ResourceLocation;
+@@ -74,6 +74,7 @@ import net.minecraft.resources.ResourceLocation;
  import net.minecraft.server.MinecraftServer;
  import net.minecraft.server.PlayerAdvancements;
  import net.minecraft.server.network.ServerGamePacketListenerImpl;
@@ -35,9 +35,9 @@ index 78fda0c982810b8b881a87099f355247566e513a..1042a822de45be54f8d54f03f2d4de90
  import net.minecraft.server.network.TextFilter;
  import net.minecraft.server.players.PlayerList;
  import net.minecraft.sounds.SoundEvent;
-@@ -263,8 +264,12 @@ public class ServerPlayer extends Player {
+@@ -258,8 +259,12 @@ public class ServerPlayer extends Player {
+     public double lastEntitySpawnRadiusSquared; // Paper - optimise isOutsideRange, this field is in blocks
      public final com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> cachedSingleHashSet; // Paper
-     public boolean needsChunkCenterUpdate; // Paper - no-tick view distance // Paper - public
      public org.bukkit.event.player.PlayerQuitEvent.QuitReason quitReason = null; // Paper - there are a lot of changes to do if we change all methods leading to the event
 +    // Yokura start
 +    public double coins;
@@ -49,7 +49,7 @@ index 78fda0c982810b8b881a87099f355247566e513a..1042a822de45be54f8d54f03f2d4de90
          super(world, world.getSharedSpawnPos(), world.getSharedSpawnAngle(), profile);
          this.chatVisibility = ChatVisiblity.FULL;
          this.canChatColor = true;
-@@ -334,6 +339,11 @@ public class ServerPlayer extends Player {
+@@ -330,6 +335,11 @@ public class ServerPlayer extends Player {
          this.bukkitPickUpLoot = true;
          this.maxHealthCache = this.getMaxHealth();
          this.cachedSingleMobDistanceMap = new com.destroystokyo.paper.util.PooledHashSets.PooledObjectLinkedOpenHashSet<>(this); // Paper
@@ -62,7 +62,7 @@ index 78fda0c982810b8b881a87099f355247566e513a..1042a822de45be54f8d54f03f2d4de90
      // Paper start - Chunk priority
      public BlockPos getPointInFront(double inFront) {
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 494ca8fa8c742d4eac9fb11878d3b3170d850265..c3c45f9bf4f9a5b982bab0530dc095a854c73123 100644
+index 33a29890435d6065a2cc4f8e8bf8209c01d5d114..1a015e5638cc8ae34ee31ab28226302a2ebe4566 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
@@ -95,7 +95,7 @@ index 494ca8fa8c742d4eac9fb11878d3b3170d850265..c3c45f9bf4f9a5b982bab0530dc095a8
  
      public ServerLoginPacketListenerImpl(MinecraftServer server, Connection connection) {
          this.state = ServerLoginPacketListenerImpl.State.HELLO;
-@@ -396,6 +405,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+@@ -397,6 +406,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
                          }
                          // CraftBukkit end
                          ServerLoginPacketListenerImpl.LOGGER.info("UUID of player {} is {}", ServerLoginPacketListenerImpl.this.gameProfile.getName(), ServerLoginPacketListenerImpl.this.gameProfile.getId());
@@ -103,7 +103,7 @@ index 494ca8fa8c742d4eac9fb11878d3b3170d850265..c3c45f9bf4f9a5b982bab0530dc095a8
                          ServerLoginPacketListenerImpl.this.state = ServerLoginPacketListenerImpl.State.READY_TO_ACCEPT;
          }
      }
-@@ -445,6 +455,37 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+@@ -446,6 +456,37 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
          return new GameProfile(uuid, profile.getName());
      }
  
@@ -142,7 +142,7 @@ index 494ca8fa8c742d4eac9fb11878d3b3170d850265..c3c45f9bf4f9a5b982bab0530dc095a8
  
          HELLO, KEY, AUTHENTICATING, NEGOTIATING, READY_TO_ACCEPT, DELAY_ACCEPT, ACCEPTED;
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index b20bfe5ab165bf86985e5ff2f93f415d9710e0e4..c29d70aa855e3580733f2b1ab57827fd95021cd3 100644
+index 88bc0807e8bf66a65422f85f1112336334eb3de2..9796e52613fdb2205bf1ff02c0256ad47f5c0e21 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 @@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
@@ -213,18 +213,18 @@ index b20bfe5ab165bf86985e5ff2f93f415d9710e0e4..c29d70aa855e3580733f2b1ab57827fd
          return this.profile;
      }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 755e3bcc4d620d5550cbfd7ba56e83816d270498..53401e5307297b4ecac968ea29281bb2ef4d31d3 100644
+index c6cd4a5790384811f3171ce740afb9459f3d6fc0..de9259c4488f7bdd4d041425ec12b02ee2e4b633 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
- import com.google.common.collect.ImmutableSet;
+@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
  import com.google.common.io.BaseEncoding;
  import com.mojang.authlib.GameProfile;
-+import fr.hygon.yokura.MongoUtils;  // Yokura
+ import com.mojang.datafixers.util.Pair;
++import fr.hygon.yokura.MongoUtils;
  import io.netty.buffer.Unpooled;
  import java.io.ByteArrayOutputStream;
  import java.io.IOException;
-@@ -160,6 +161,68 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -165,6 +166,67 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          this.firstPlayed = System.currentTimeMillis();
      }
  
@@ -289,7 +289,6 @@ index 755e3bcc4d620d5550cbfd7ba56e83816d270498..53401e5307297b4ecac968ea29281bb2
 +        return getTokens() >= tokens;
 +    }
 +    // Yokura end
-+
      public GameProfile getProfile() {
          return this.getHandle().getGameProfile();
      }

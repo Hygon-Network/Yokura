@@ -109,15 +109,14 @@ index 0000000000000000000000000000000000000000..5854249acd514cf8e55dffc490f78f70
 +    }
 +}
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index 6fe68b7f71d4e323c590c515ee2f9a3ac5f044c3..7ac475138700199f1fd7c4e2453d4b205e1e719f 100644
+index f5ded992672dde910cd4e1be50c238b142157ff8..bb74a69f49e602e9fe9dc505e8370e1d14440a39 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
-@@ -1,10 +1,12 @@
+@@ -1,9 +1,11 @@
  package org.bukkit.entity;
  
- import java.net.InetSocketAddress;
 +import java.util.List; // Yokura
- import java.util.Set; // Paper
+ import java.net.InetSocketAddress;
  import java.util.UUID;
  import com.destroystokyo.paper.ClientOption; // Paper
  import com.destroystokyo.paper.Title; // Paper
@@ -125,7 +124,7 @@ index 6fe68b7f71d4e323c590c515ee2f9a3ac5f044c3..7ac475138700199f1fd7c4e2453d4b20
  import net.kyori.adventure.text.Component;
  import com.destroystokyo.paper.profile.PlayerProfile; // Paper
  import java.util.Date; // Paper
-@@ -44,6 +46,39 @@ import org.jetbrains.annotations.Nullable;
+@@ -45,6 +47,39 @@ import org.jetbrains.annotations.Nullable;
   */
  public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginMessageRecipient, net.kyori.adventure.identity.Identified, com.destroystokyo.paper.network.NetworkClient { // Paper
  

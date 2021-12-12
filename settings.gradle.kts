@@ -1,3 +1,5 @@
+import java.util.Locale
+
 pluginManagement {
     repositories {
         gradlePluginPortal()
@@ -5,6 +7,9 @@ pluginManagement {
     }
 }
 
-rootProject.name = "Yokura"
-
-include("Yokura-API", "Yokura-Server")
+rootProject.name = "yokura"
+for (name in listOf("Yokura-API", "Yokura-Server")) {
+    val projName = name.toLowerCase(Locale.ENGLISH)
+    include(projName)
+    findProject(":$projName")!!.projectDir = file(name)
+}

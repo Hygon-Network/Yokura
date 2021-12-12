@@ -506,10 +506,10 @@ index 0000000000000000000000000000000000000000..167bf785bff5f2d13afb2ae78db252c2
 +}
 \ No newline at end of file
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 157625ffa7cd2d0052401a75d3b7e8e290a54dc6..11e0f580afc95d2baba2d0c9a1db4e0c7eb1511b 100644
+index 0dfd3c3901bd8ee6f5afc6dc1f22c5d976a7168d..3a07d095a7abad32680067a50fc3ea864602d2a4 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -248,6 +248,14 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -244,6 +244,14 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
              return false;
          }
  
@@ -524,7 +524,7 @@ index 157625ffa7cd2d0052401a75d3b7e8e290a54dc6..11e0f580afc95d2baba2d0c9a1db4e0c
          com.mongodb.MongoCredential mongoCredential = com.mongodb.MongoCredential.createCredential(YokuraGlobalConfig.mongoUser, YokuraGlobalConfig.mongoDatabase, YokuraGlobalConfig.mongoPassword);
          com.mongodb.MongoClient mongoClient = new com.mongodb.MongoClient(new com.mongodb.ServerAddress(YokuraGlobalConfig.mongoHost, YokuraGlobalConfig.mongoPort), mongoCredential, com.mongodb.MongoClientOptions.builder().build());
          com.mongodb.client.MongoDatabase mongoDatabase = mongoClient.getDatabase(YokuraGlobalConfig.mongoDatabase);
-@@ -260,7 +268,8 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -256,7 +264,8 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
              return false;
          }
  
