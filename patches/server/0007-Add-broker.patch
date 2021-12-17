@@ -4,452 +4,76 @@ Date: Mon, 20 Sep 2021 19:01:36 +0200
 Subject: [PATCH] Add broker
 
 
+diff --git a/build.gradle.kts b/build.gradle.kts
+index 3b8fafbb37811d248e2544012684063c5ae811e2..c80fceaa940236c6b03861154faf3f57182f3981 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -15,6 +15,10 @@ repositories {
+         mavenContent { includeModule("net.fabricmc", "mapping-io") }
+     }
+     // Paper end
++
++    maven("http://37.59.90.35/maven/") {
++        isAllowInsecureProtocol = true
++    }
+ }
+ 
+ dependencies {
 diff --git a/src/main/java/fr/hygon/yokura/YokuraAPIServer.java b/src/main/java/fr/hygon/yokura/YokuraAPIServer.java
-index 6e403a6d5f7990478c5bc372b75a68398bf8eee3..e3833166e69cdb3d2ad012b270a18c566db1245c 100644
+index 6e403a6d5f7990478c5bc372b75a68398bf8eee3..a4fcd77007532725ea1e60359d4830dc932d635c 100644
 --- a/src/main/java/fr/hygon/yokura/YokuraAPIServer.java
 +++ b/src/main/java/fr/hygon/yokura/YokuraAPIServer.java
-@@ -2,6 +2,9 @@ package fr.hygon.yokura;
+@@ -2,16 +2,10 @@ package fr.hygon.yokura;
  
  import com.mongodb.MongoClient;
  import com.mongodb.client.MongoDatabase;
-+import fr.hygon.yokura.broker.Message;
-+import fr.hygon.yokura.broker.YokuraBroker;
-+import fr.hygon.yokura.broker.packets.MessagePacket;
++import fr.hygon.brokerapi.Broker;
++import fr.hygon.brokerapi.packets.Packet;
  
- public class YokuraAPIServer implements IYokuraAPI {
-     private final MongoClient mongoClient;
-@@ -21,4 +24,10 @@ public class YokuraAPIServer implements IYokuraAPI {
+-public class YokuraAPIServer implements IYokuraAPI {
+-    private final MongoClient mongoClient;
+-    private final MongoDatabase mongoDatabase;
+-
+-    public YokuraAPIServer(MongoClient mongoClient, MongoDatabase mongoDatabase) {
+-        this.mongoClient = mongoClient;
+-        this.mongoDatabase = mongoDatabase;
+-    }
+-
++public record YokuraAPIServer(MongoClient mongoClient, MongoDatabase mongoDatabase, Broker broker) implements IYokuraAPI {
+     @Override
+     public MongoClient getMongoClient() {
+         return mongoClient;
+@@ -21,4 +15,9 @@ public class YokuraAPIServer implements IYokuraAPI {
      public MongoDatabase getMongoDatabase() {
          return mongoDatabase;
      }
 +
 +    @Override
-+    public void publish(Message message) {
-+        MessagePacket messagePacket = new MessagePacket(message);
-+        YokuraBroker.sendPacket(messagePacket);
++    public void sendPacket(Packet packet) {
++        broker.sendPacket(packet);
 +    }
  }
-diff --git a/src/main/java/fr/hygon/yokura/broker/ClientHandler.java b/src/main/java/fr/hygon/yokura/broker/ClientHandler.java
+diff --git a/src/main/java/fr/hygon/yokura/broker/PacketListenerImpl.java b/src/main/java/fr/hygon/yokura/broker/PacketListenerImpl.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..9b9b35040aefe8d3ce3f0d7046684e12cae23c47
+index 0000000000000000000000000000000000000000..70bd0a40c3d784f685cd5f32df3e124b05f75cea
 --- /dev/null
-+++ b/src/main/java/fr/hygon/yokura/broker/ClientHandler.java
-@@ -0,0 +1,59 @@
-+package fr.hygon.yokura.broker;
-+
-+import fr.hygon.yokura.broker.packets.Packet;
-+import fr.hygon.yokura.broker.packets.Packets;
-+import io.netty.buffer.ByteBuf;
-+import io.netty.buffer.Unpooled;
-+import io.netty.channel.ChannelHandlerContext;
-+import io.netty.channel.ChannelInboundHandlerAdapter;
-+
-+public class ClientHandler extends ChannelInboundHandlerAdapter {
-+    private ByteBuf byteBuffer;
-+
-+    @Override
-+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-+        byteBuffer = ctx.alloc().buffer(4);
-+    }
-+
-+    @Override
-+    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-+        byteBuffer.release();
-+        byteBuffer = null;
-+    }
-+
-+    @Override
-+    public void channelRead(ChannelHandlerContext channelHandlerContext, Object object) {
-+        ByteBuf byteBuf = (ByteBuf) object;
-+        byteBuffer.writeBytes(byteBuf);
-+        byteBuf.release();
-+
-+        if(byteBuffer.readableBytes() >= 4) {
-+            int packetSize = byteBuffer.readInt();
-+            if(byteBuffer.readableBytes() >= packetSize) {
-+                ByteBuf packetBuf = channelHandlerContext.alloc().buffer(packetSize);
-+                byteBuffer.readBytes(packetBuf);
-+
-+                int packetID = packetBuf.readInt();
-+                Packet packet = Packets.getPacketByID(packetID);
-+                if(packet == null) {
-+                    System.err.println("Received unknown packet with id " + packetID);
-+                    return;
-+                }
-+                packet.read(channelHandlerContext, packetBuf);
-+            } else {
-+                byteBuffer.resetReaderIndex();
-+                byteBuffer.resetWriterIndex();
-+            }
-+        }
-+    }
-+
-+    @Override
-+    public void channelReadComplete(ChannelHandlerContext ctx) {
-+        ctx.writeAndFlush(Unpooled.EMPTY_BUFFER);
-+    }
-+
-+    @Override
-+    public void exceptionCaught(ChannelHandlerContext channelHandlerContext, Throwable cause) {
-+        cause.printStackTrace();
-+    }
-+}
-\ No newline at end of file
-diff --git a/src/main/java/fr/hygon/yokura/broker/ServerPubSubManager.java b/src/main/java/fr/hygon/yokura/broker/ServerPubSubManager.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..e280974c7ef54d0dfa6b4b01b38a25901efc8442
---- /dev/null
-+++ b/src/main/java/fr/hygon/yokura/broker/ServerPubSubManager.java
-@@ -0,0 +1,54 @@
-+package fr.hygon.yokura.broker;
-+
-+import fr.hygon.yokura.broker.packets.ChannelPacket;
-+import fr.hygon.yokura.broker.packets.MessagePacket;
-+import java.util.ArrayList;
-+
-+public class ServerPubSubManager implements BrokerPubSub.PubSubManager {
-+    private static final ArrayList<BrokerPubSub> pubSubs = new ArrayList<>();
-+
-+    @Override
-+    public void registerChannel(BrokerPubSub pubSub, String channel) {
-+        if(!pubSubs.contains(pubSub)) {
-+            pubSubs.add(pubSub);
-+        }
-+
-+        ChannelPacket channelPacket = new ChannelPacket(ChannelPacket.Actions.REGISTER, channel);
-+        YokuraBroker.sendPacket(channelPacket);
-+    }
-+
-+    @Override
-+    public void unregisterChannel(BrokerPubSub pubSub, String channel) {
-+        if(pubSub.channels.isEmpty()) {
-+            pubSubs.remove(pubSub);
-+        }
-+
-+        boolean isClientStillUsingChannel = false; // Other pubsubs might still use it!
-+        for(BrokerPubSub brokerPubSubs : pubSubs) {
-+            if(brokerPubSubs.channels.contains(channel)) {
-+                isClientStillUsingChannel = true;
-+                break;
-+            }
-+        }
-+
-+        if(!isClientStillUsingChannel) { // No pubsubs are listening for this channel so we can unregister it
-+            ChannelPacket channelPacket = new ChannelPacket(ChannelPacket.Actions.UNREGISTER, channel);
-+            YokuraBroker.sendPacket(channelPacket);
-+        }
-+    }
-+
-+    @Override
-+    public void publish(Message message) {
-+        MessagePacket messagePacket = new MessagePacket(message);
-+        YokuraBroker.sendPacket(messagePacket);
-+    }
-+
-+    @Override
-+    public void handleMessage(String channel, byte[] message) {
-+        for(BrokerPubSub brokerPubSub : pubSubs) {
-+            if(brokerPubSub.channels.contains(channel)) {
-+                brokerPubSub.onReceive(channel, message);
-+            }
-+        }
-+    }
-+}
-diff --git a/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java b/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..5a62dee7c1c988159c3556b8aeb6965253e33688
---- /dev/null
-+++ b/src/main/java/fr/hygon/yokura/broker/YokuraBroker.java
-@@ -0,0 +1,106 @@
-+package fr.hygon.yokura.broker;
-+
-+import fr.hygon.yokura.broker.packets.Packet;
-+import fr.hygon.yokura.broker.packets.Packets;
-+import fr.hygon.yokura.broker.packets.RegisterClientPacket;
-+import io.netty.bootstrap.Bootstrap;
-+import io.netty.buffer.ByteBuf;
-+import io.netty.buffer.Unpooled;
-+import io.netty.channel.*;
-+import io.netty.channel.nio.NioEventLoopGroup;
-+import io.netty.channel.socket.SocketChannel;
-+import io.netty.channel.socket.nio.NioSocketChannel;
-+import java.net.InetSocketAddress;
-+import java.util.UUID;
-+
-+public class YokuraBroker {
-+    public static UUID CLIENT_UUID;
-+
-+    private final Object locker = new Object();
-+    public boolean isConnected = false;
-+    public boolean hasFinished = false;
-+
-+    private static Channel brokerChannel = null;
-+
-+    public boolean connect(String host, int port) {
-+        CLIENT_UUID = UUID.randomUUID();
-+        BrokerPubSub.setPubSubManager(new ServerPubSubManager());
-+
-+        Thread brokerThread = new Thread(() -> {
-+            EventLoopGroup group = new NioEventLoopGroup();
-+            try{
-+                Bootstrap clientBootstrap = new Bootstrap();
-+
-+                clientBootstrap.group(group);
-+                clientBootstrap.channel(NioSocketChannel.class);
-+                clientBootstrap.remoteAddress(new InetSocketAddress(host, port));
-+                clientBootstrap.handler(new ChannelInitializer<SocketChannel>() {
-+                    protected void initChannel(SocketChannel socketChannel) {
-+                        socketChannel.pipeline().addLast(new ClientHandler());
-+                    }
-+                });
-+                ChannelFuture channelFuture = clientBootstrap.connect();
-+                channelFuture.addListener((ChannelFutureListener) future -> {
-+                    if(future.isSuccess()) {
-+                        brokerChannel = future.channel();
-+                        sendPacket(new RegisterClientPacket());
-+                        Thread.sleep(100); //Give some time for the packet to be sent and treated.
-+                    }
-+
-+                    synchronized (locker) {
-+                        isConnected = future.isSuccess();
-+                        hasFinished = true;
-+                        locker.notify();
-+                    }
-+                });
-+                channelFuture.sync();
-+                channelFuture.channel().closeFuture().sync();
-+            } catch (InterruptedException exception) {
-+                exception.printStackTrace();
-+            } finally {
-+                try {
-+                    group.shutdownGracefully().sync();
-+                } catch (InterruptedException exception) {
-+                    exception.printStackTrace();
-+                }
-+            }
-+        });
-+        brokerThread.setName("Broker Thread");
-+        brokerThread.start();
-+
-+        synchronized (locker) {
-+            while (!hasFinished) {
-+                try {
-+                    locker.wait();
-+                } catch (InterruptedException exception) {
-+                    exception.printStackTrace();
-+                }
-+            }
-+        }
-+
-+        return isConnected;
-+    }
-+
-+    public static void sendPacket(Packet packet) {
-+        ByteBuf byteBuf = Unpooled.buffer();
-+        byteBuf.writeInt(Packets.getIDByPacket(packet));
-+
-+        byteBuf.writeLong(CLIENT_UUID.getMostSignificantBits());
-+        byteBuf.writeLong(CLIENT_UUID.getLeastSignificantBits());
-+
-+        packet.write(byteBuf);
-+        writePacketSize(byteBuf);
-+        brokerChannel.writeAndFlush(byteBuf);
-+    }
-+
-+    private static void writePacketSize(ByteBuf byteBuf) {
-+        byte[] bytes = new byte[byteBuf.readableBytes()];
-+        byteBuf.readBytes(bytes);
-+
-+        byteBuf.resetReaderIndex();
-+        byteBuf.resetWriterIndex();
-+
-+        byteBuf.writeInt(bytes.length);
-+        byteBuf.writeBytes(bytes);
-+    }
-+}
-\ No newline at end of file
-diff --git a/src/main/java/fr/hygon/yokura/broker/packets/ChannelPacket.java b/src/main/java/fr/hygon/yokura/broker/packets/ChannelPacket.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..dbeeffd6b2e4ba046e025d17bbf92edcd464593e
---- /dev/null
-+++ b/src/main/java/fr/hygon/yokura/broker/packets/ChannelPacket.java
-@@ -0,0 +1,44 @@
-+package fr.hygon.yokura.broker.packets;
-+
-+import io.netty.buffer.ByteBuf;
-+import io.netty.channel.ChannelHandlerContext;
-+
-+import java.nio.charset.StandardCharsets;
-+
-+public class ChannelPacket implements Packet {
-+    private final Actions action;
-+    private final String channel;
-+
-+    public ChannelPacket(Actions action, String channel) {
-+        this.action = action;
-+        this.channel = channel;
-+    }
-+
-+    @Override
-+    public void read(ChannelHandlerContext ctx, ByteBuf in) { // The client will not receive this packet
-+
-+    }
-+
-+    @Override
-+    public void write(ByteBuf out) {
-+        out.writeInt(action.getActionID());
-+
-+        out.writeInt(channel.length());
-+        out.writeCharSequence(channel, StandardCharsets.UTF_8);
-+    }
-+
-+    public enum Actions {
-+        REGISTER(0),
-+        UNREGISTER(1);
-+
-+        private final int actionID;
-+
-+        Actions(int actionID) {
-+            this.actionID = actionID;
-+        }
-+
-+        public int getActionID() {
-+            return actionID;
-+        }
-+    }
-+}
-\ No newline at end of file
-diff --git a/src/main/java/fr/hygon/yokura/broker/packets/MessagePacket.java b/src/main/java/fr/hygon/yokura/broker/packets/MessagePacket.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..50f01885e9e1149324da157a41c58f72ae927a42
---- /dev/null
-+++ b/src/main/java/fr/hygon/yokura/broker/packets/MessagePacket.java
-@@ -0,0 +1,35 @@
-+package fr.hygon.yokura.broker.packets;
-+
-+import fr.hygon.yokura.broker.BrokerPubSub;
-+import fr.hygon.yokura.broker.Message;
-+import io.netty.buffer.ByteBuf;
-+import io.netty.buffer.Unpooled;
-+import io.netty.channel.ChannelHandlerContext;
-+import java.nio.charset.StandardCharsets;
-+
-+public class MessagePacket implements Packet {
-+    private final Message message;
-+
-+    public MessagePacket(Message message) {
-+        this.message = message;
-+    }
-+
-+    @Override
-+    public void read(ChannelHandlerContext ctx, ByteBuf in) {
-+        int channelLength = in.readInt();
-+        String channel = (String) in.readCharSequence(channelLength, StandardCharsets.UTF_8);
-+
-+        byte[] message = new byte[in.readableBytes()];
-+        in.readBytes(message);
-+
-+        BrokerPubSub.getPubSubManager().handleMessage(channel, message);
-+    }
-+
-+    @Override
-+    public void write(ByteBuf out) {
-+        out.writeInt(message.getChannel().length());
-+        out.writeCharSequence(message.getChannel(), StandardCharsets.UTF_8);
-+
-+        out.writeBytes(Unpooled.wrappedBuffer(message.getMessage()));
-+    }
-+}
-diff --git a/src/main/java/fr/hygon/yokura/broker/packets/Packet.java b/src/main/java/fr/hygon/yokura/broker/packets/Packet.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..5b084b4d478b7cc1b367d2b93429d0a3e6df56db
---- /dev/null
-+++ b/src/main/java/fr/hygon/yokura/broker/packets/Packet.java
-@@ -0,0 +1,10 @@
-+package fr.hygon.yokura.broker.packets;
-+
-+import io.netty.buffer.ByteBuf;
-+import io.netty.channel.ChannelHandlerContext;
-+
-+public interface Packet {
-+    void read(ChannelHandlerContext ctx, ByteBuf in);
-+
-+    void write(ByteBuf out);
-+}
-diff --git a/src/main/java/fr/hygon/yokura/broker/packets/Packets.java b/src/main/java/fr/hygon/yokura/broker/packets/Packets.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..aa19fe3101376fc021927dc55f28ecbcac91bc0a
---- /dev/null
-+++ b/src/main/java/fr/hygon/yokura/broker/packets/Packets.java
-@@ -0,0 +1,47 @@
-+package fr.hygon.yokura.broker.packets;
-+
-+public enum Packets {
-+    REGISTER_CLIENT_PACKET(0, RegisterClientPacket.class),
-+    CHANNEL_PACKET(1, ChannelPacket.class),
-+    MESSAGE_PACKET(2, MessagePacket.class);
-+
-+    private final int packetID;
-+    private final Class<? extends Packet> packet;
-+
-+    Packets(int packetID, Class<? extends Packet> packet) {
-+        this.packetID = packetID;
-+        this.packet = packet;
-+    }
-+
-+    public int getPacketID() {
-+        return packetID;
-+    }
-+
-+    public Class<? extends Packet> getPacket() {
-+        return packet;
-+    }
-+
-+    public static Packet getPacketByID(int id) {
-+        for(Packets packets : Packets.values()) {
-+            if(packets.packetID == id) {
-+                try {
-+                    return (Packet) packets.getPacket().getConstructors()[0].newInstance();
-+                } catch (Exception exception) {
-+                    exception.printStackTrace();
-+                }
-+            }
-+        }
-+
-+        return null;
-+    }
-+
-+    public static int getIDByPacket(Packet packet) {
-+        for(Packets packets : Packets.values()) {
-+            if(packets.getPacket().equals(packet.getClass())) {
-+                return packets.getPacketID();
-+            }
-+        }
-+
-+        return -1;
-+    }
-+}
-diff --git a/src/main/java/fr/hygon/yokura/broker/packets/RegisterClientPacket.java b/src/main/java/fr/hygon/yokura/broker/packets/RegisterClientPacket.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..31fd986466f394c443a7fc10f3edce71b9da1ec1
---- /dev/null
-+++ b/src/main/java/fr/hygon/yokura/broker/packets/RegisterClientPacket.java
++++ b/src/main/java/fr/hygon/yokura/broker/PacketListenerImpl.java
 @@ -0,0 +1,17 @@
-+package fr.hygon.yokura.broker.packets;
++package fr.hygon.yokura.broker;
 +
-+import io.netty.buffer.ByteBuf;
-+import io.netty.channel.ChannelHandlerContext;
++import fr.hygon.brokerapi.packets.PacketListener;
++import fr.hygon.brokerapi.packets.ServerStatusPacket;
++import fr.hygon.brokerapi.packets.VelocityKeyUpdatePacket;
 +
-+public class RegisterClientPacket implements Packet {
++public class PacketListenerImpl implements PacketListener {
 +    @Override
-+    public void read(ChannelHandlerContext ctx, ByteBuf in) { // The client will not receive this packet
++    public void handleVelocityKeyUpdate(VelocityKeyUpdatePacket velocityKeyUpdatePacket) {
 +
 +    }
 +
 +    @Override
-+    public void write(ByteBuf out) {
-+        out.writeInt(Packets.REGISTER_CLIENT_PACKET.getPacketID());
-+        // The UUID has already been wrote before, so we don't need to rewrite it.
++    public void handleServerStatusUpdate(ServerStatusPacket serverStatusPacket) {
++
 +    }
 +}
 diff --git a/src/main/java/fr/hygon/yokura/config/YokuraGlobalConfig.java b/src/main/java/fr/hygon/yokura/config/YokuraGlobalConfig.java
@@ -474,27 +98,32 @@ index b92672eebf9b815c51552651cc2dee7cfbc3abfb..7547132521b586f329abe0d51c89b424
      private static void getDefaultCoins() {
          defaultCoins = getDouble("players.default-coins", defaultCoins);
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 056972869403c41b80a56f57fbc802a1f78853b6..f281412f298f98e4b292596c67c1d22b8c219d57 100644
+index 056972869403c41b80a56f57fbc802a1f78853b6..04ab2817f2ff1a8dd406d4008402041766fd272a 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 @@ -21,6 +21,7 @@ import java.util.Locale;
  import java.util.function.BooleanSupplier;
  import java.util.regex.Pattern;
  import javax.annotation.Nullable;
-+import fr.hygon.yokura.broker.YokuraBroker; // Yokura
++import fr.hygon.brokerapi.Broker; // Yokura
  import fr.hygon.yokura.config.YokuraGlobalConfig; // Yokura
  import net.minecraft.DefaultUncaughtExceptionHandler;
  import net.minecraft.DefaultUncaughtExceptionHandlerWithName;
-@@ -255,6 +256,12 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -254,7 +255,16 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+             return false;
          }
  
-         fr.hygon.yokura.YokuraAPI.setInstance(new fr.hygon.yokura.YokuraAPIServer(mongoClient, mongoDatabase));
+-        fr.hygon.yokura.YokuraAPI.setInstance(new fr.hygon.yokura.YokuraAPIServer(mongoClient, mongoDatabase));
++        Broker broker = new Broker(YokuraGlobalConfig.brokerHost, YokuraGlobalConfig.brokerPort, new fr.hygon.yokura.broker.PacketListenerImpl());
 +
-+        YokuraBroker broker = new YokuraBroker();
-+        if(!broker.connect(YokuraGlobalConfig.brokerHost, YokuraGlobalConfig.brokerPort)) {
-+            DedicatedServer.LOGGER.error("Couldn't connect to the broker.");
++        try {
++            broker.connect();
++            DedicatedServer.LOGGER.info("Connected to the broker.");
++        } catch (InterruptedException exception) {
++            DedicatedServer.LOGGER.error("Couldn't connect to the broker.", exception);
 +            return false;
 +        }
++        fr.hygon.yokura.YokuraAPI.setInstance(new fr.hygon.yokura.YokuraAPIServer(mongoClient, mongoDatabase, broker));
          // Yokura end
  
          this.setPvpAllowed(dedicatedserverproperties.pvp);

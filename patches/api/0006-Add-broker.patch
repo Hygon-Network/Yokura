@@ -4,15 +4,37 @@ Date: Mon, 20 Sep 2021 19:01:44 +0200
 Subject: [PATCH] Add broker
 
 
+diff --git a/build.gradle.kts b/build.gradle.kts
+index dd91756ce7501c68c55afcf7c948431450bb5506..6a2d184cbf902e8d7dc0de5a2b09df90892620de 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -21,9 +21,17 @@ configurations.api {
+     extendsFrom(apiAndDocs)
+ }
+ 
++
++repositories {
++    maven("http://37.59.90.35/maven/") {
++        isAllowInsecureProtocol = true
++    }
++}
++
+ dependencies {
+     // api dependencies are listed transitively to API consumers
+     api("org.mongodb:mongo-java-driver:3.12.10") // Yokura
++    api("fr.hygon:brokerapi:1.0") // Yokura
+     api("commons-lang:commons-lang:2.6")
+     api("com.google.guava:guava:31.0.1-jre")
+     api("com.google.code.gson:gson:2.8.8")
 diff --git a/src/main/java/fr/hygon/yokura/IYokuraAPI.java b/src/main/java/fr/hygon/yokura/IYokuraAPI.java
-index ff3658c487a52502dc9a529b3d92a67eb8cc7513..12b116cf95cc4e6f993642edd2bdd5052c17cd4a 100644
+index ff3658c487a52502dc9a529b3d92a67eb8cc7513..d8592af9cc94fc4337e471687f1bf64505f8783e 100644
 --- a/src/main/java/fr/hygon/yokura/IYokuraAPI.java
 +++ b/src/main/java/fr/hygon/yokura/IYokuraAPI.java
 @@ -2,6 +2,7 @@ package fr.hygon.yokura;
  
  import com.mongodb.MongoClient;
  import com.mongodb.client.MongoDatabase;
-+import fr.hygon.yokura.broker.Message;
++import fr.hygon.brokerapi.packets.Packet;
  
  public interface IYokuraAPI {
      /**
@@ -22,21 +44,21 @@ index ff3658c487a52502dc9a529b3d92a67eb8cc7513..12b116cf95cc4e6f993642edd2bdd505
      MongoDatabase getMongoDatabase();
 +
 +    /**
-+     * Publish a message on a specific channel
-+     * @param message the message ({@link Message})
++     * Sends a packet to the broker that will be re-sent to <b>all</b> the connected clients.
++     * @param packet the packet that will be sent.
 +     */
-+    void publish(Message message);
++    void sendPacket(Packet packet);
  }
 \ No newline at end of file
 diff --git a/src/main/java/fr/hygon/yokura/YokuraAPI.java b/src/main/java/fr/hygon/yokura/YokuraAPI.java
-index ea3204863ee6681c70e7735dc4aa45f8903ea5b8..7cce73b1cebd4b3be34b51d307ab33fc09eef86b 100644
+index ea3204863ee6681c70e7735dc4aa45f8903ea5b8..9d9330bdd70eed77dae5e72b829fd32164b4a4db 100644
 --- a/src/main/java/fr/hygon/yokura/YokuraAPI.java
 +++ b/src/main/java/fr/hygon/yokura/YokuraAPI.java
 @@ -2,6 +2,7 @@ package fr.hygon.yokura;
  
  import com.mongodb.MongoClient;
  import com.mongodb.client.MongoDatabase;
-+import fr.hygon.yokura.broker.Message;
++import fr.hygon.brokerapi.packets.Packet;
  
  public class YokuraAPI {
      private static IYokuraAPI instance;
@@ -46,95 +68,10 @@ index ea3204863ee6681c70e7735dc4aa45f8903ea5b8..7cce73b1cebd4b3be34b51d307ab33fc
      }
 +
 +    /**
-+     * Publish a message on a specific channel
-+     * @param message the message ({@link Message})
++     * Sends a packet to the broker that will be re-sent to <b>all</b> the connected clients.
++     * @param packet the packet that will be sent.
 +     */
-+    public static void publish(Message message) {
-+        instance.publish(message);
++    public void sendPacket(Packet packet) {
++        instance.sendPacket(packet);
 +    }
  }
-diff --git a/src/main/java/fr/hygon/yokura/broker/BrokerPubSub.java b/src/main/java/fr/hygon/yokura/broker/BrokerPubSub.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..d334fa37e1b4d8607f329458bbae9747110529cf
---- /dev/null
-+++ b/src/main/java/fr/hygon/yokura/broker/BrokerPubSub.java
-@@ -0,0 +1,47 @@
-+package fr.hygon.yokura.broker;
-+
-+import java.util.ArrayList;
-+
-+public abstract class BrokerPubSub {
-+    public ArrayList<String> channels = new ArrayList<>();
-+
-+    public void onReceive(String channel, byte[] message) {}
-+
-+    public void registerChannel(String channel) {
-+        channels.add(channel);
-+        pubSubManager.registerChannel(this, channel);
-+    }
-+
-+    public void unregisterChannel(String channel) {
-+        channels.remove(channel);
-+        pubSubManager.unregisterChannel(this, channel);
-+    }
-+
-+
-+
-+    /* PubSubManager */
-+
-+    private static PubSubManager pubSubManager = null;
-+
-+    public static void setPubSubManager(PubSubManager pubSubManager) {
-+        if(BrokerPubSub.pubSubManager != null) {
-+            throw new UnsupportedOperationException("Couldn't redefine the PubSubManager");
-+        }
-+
-+        BrokerPubSub.pubSubManager = pubSubManager;
-+    }
-+
-+    public static PubSubManager getPubSubManager() {
-+        return pubSubManager;
-+    }
-+
-+    public interface PubSubManager {
-+        public void registerChannel(BrokerPubSub pubSub, String channel);
-+
-+        public void unregisterChannel(BrokerPubSub pubSub, String channel);
-+
-+        public void publish(Message message);
-+
-+        public void handleMessage(String channel, byte[] message);
-+    }
-+}
-diff --git a/src/main/java/fr/hygon/yokura/broker/Message.java b/src/main/java/fr/hygon/yokura/broker/Message.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..7089561997549c7a37813dbe28198725999bca67
---- /dev/null
-+++ b/src/main/java/fr/hygon/yokura/broker/Message.java
-@@ -0,0 +1,26 @@
-+package fr.hygon.yokura.broker;
-+
-+import java.util.Arrays;
-+
-+public class Message {
-+    private final String channel;
-+    private final byte[] message;
-+
-+    public Message(String channel, byte[] message) {
-+        this.channel = channel;
-+        this.message = message;
-+    }
-+
-+    public String getChannel() {
-+        return channel;
-+    }
-+
-+    public byte[] getMessage() {
-+        return message;
-+    }
-+
-+    @Override
-+    public String toString() {
-+        return "utils.Message{channel='" + channel + "', message=" + Arrays.toString(message) + '}';
-+    }
-+}

@@ -5,21 +5,21 @@ Subject: [PATCH] Add the server system
 
 
 diff --git a/src/main/java/fr/hygon/yokura/IYokuraAPI.java b/src/main/java/fr/hygon/yokura/IYokuraAPI.java
-index 12b116cf95cc4e6f993642edd2bdd5052c17cd4a..567ced5aaea9c0e6014ceff50fdfcc2b62afc0de 100644
+index d8592af9cc94fc4337e471687f1bf64505f8783e..2f0c5764eac90c879cdf41467c987bddb429463a 100644
 --- a/src/main/java/fr/hygon/yokura/IYokuraAPI.java
 +++ b/src/main/java/fr/hygon/yokura/IYokuraAPI.java
 @@ -3,6 +3,7 @@ package fr.hygon.yokura;
  import com.mongodb.MongoClient;
  import com.mongodb.client.MongoDatabase;
- import fr.hygon.yokura.broker.Message;
-+import fr.hygon.yokura.servers.Status;
+ import fr.hygon.brokerapi.packets.Packet;
++import fr.hygon.brokerapi.packets.ServerStatusPacket;
  
  public interface IYokuraAPI {
      /**
 @@ -20,4 +21,16 @@ public interface IYokuraAPI {
-      * @param message the message ({@link Message})
+      * @param packet the packet that will be sent.
       */
-     void publish(Message message);
+     void sendPacket(Packet packet);
 +
 +    /**
 +     * @return the server id. Returns null if the current server is a static server.
@@ -29,26 +29,26 @@ index 12b116cf95cc4e6f993642edd2bdd5052c17cd4a..567ced5aaea9c0e6014ceff50fdfcc2b
 +    /**
 +     * Updates the status of the server
 +     * @param status the nex status
-+     * @see Status for the status list
++     * @see ServerStatusPacket.Status for the status list
 +     */
-+    void setStatus(Status status);
++    void setStatus(ServerStatusPacket.Status status);
  }
 \ No newline at end of file
 diff --git a/src/main/java/fr/hygon/yokura/YokuraAPI.java b/src/main/java/fr/hygon/yokura/YokuraAPI.java
-index 7cce73b1cebd4b3be34b51d307ab33fc09eef86b..9513449ff782cf5cd40734e65317e5556e0304e2 100644
+index 9d9330bdd70eed77dae5e72b829fd32164b4a4db..8009f188281e0ce24c0982ef2e205978d26d8567 100644
 --- a/src/main/java/fr/hygon/yokura/YokuraAPI.java
 +++ b/src/main/java/fr/hygon/yokura/YokuraAPI.java
 @@ -3,6 +3,7 @@ package fr.hygon.yokura;
  import com.mongodb.MongoClient;
  import com.mongodb.client.MongoDatabase;
- import fr.hygon.yokura.broker.Message;
-+import fr.hygon.yokura.servers.Status;
+ import fr.hygon.brokerapi.packets.Packet;
++import fr.hygon.brokerapi.packets.ServerStatusPacket;
  
  public class YokuraAPI {
      private static IYokuraAPI instance;
 @@ -50,4 +51,21 @@ public class YokuraAPI {
-     public static void publish(Message message) {
-         instance.publish(message);
+     public void sendPacket(Packet packet) {
+         instance.sendPacket(packet);
      }
 +
 +
@@ -62,9 +62,9 @@ index 7cce73b1cebd4b3be34b51d307ab33fc09eef86b..9513449ff782cf5cd40734e65317e555
 +    /**
 +     * Updates the status of the server
 +     * @param status the nex status
-+     * @see Status for the status list
++     * @see ServerStatusPacket.Status for the status list
 +     */
-+    public static void setStatus(Status status) {
++    public static void setStatus(ServerStatusPacket.Status status) {
 +        instance.setStatus(status);
 +    }
  }

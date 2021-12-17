@@ -4,42 +4,6 @@ Date: Sat, 20 Nov 2021 17:25:00 +0100
 Subject: [PATCH] Add a discord webhook error logger
 
 
-diff --git a/src/main/java/fr/hygon/yokura/YokuraAPIServer.java b/src/main/java/fr/hygon/yokura/YokuraAPIServer.java
-index 8abb9856e92e6d6ada0a08d78aab01e7acb8356c..4ac4bf45649646c8f29461d198f8f268dcc04a52 100644
---- a/src/main/java/fr/hygon/yokura/YokuraAPIServer.java
-+++ b/src/main/java/fr/hygon/yokura/YokuraAPIServer.java
-@@ -11,13 +11,11 @@ import java.io.DataOutputStream;
- import java.io.IOException;
- 
- public class YokuraAPIServer implements IYokuraAPI {
--    private final MongoClient mongoClient;
--    private final MongoDatabase mongoDatabase;
-+    private MongoClient mongoClient = null;
-+    private MongoDatabase mongoDatabase = null;
-     private final String serverID;
- 
--    public YokuraAPIServer(MongoClient mongoClient, MongoDatabase mongoDatabase, String serverID) {
--        this.mongoClient = mongoClient;
--        this.mongoDatabase = mongoDatabase;
-+    public YokuraAPIServer(String serverID) {
-         this.serverID = serverID;
-     }
- 
-@@ -31,6 +29,14 @@ public class YokuraAPIServer implements IYokuraAPI {
-         return mongoDatabase;
-     }
- 
-+    public void setMongoClient(MongoClient mongoClient) {
-+        this.mongoClient = mongoClient;
-+    }
-+
-+    public void setMongoDatabase(MongoDatabase mongoDatabase) {
-+        this.mongoDatabase = mongoDatabase;
-+    }
-+
-     @Override
-     public void publish(Message message) {
-         MessagePacket messagePacket = new MessagePacket(message);
 diff --git a/src/main/java/fr/hygon/yokura/config/YokuraGlobalConfig.java b/src/main/java/fr/hygon/yokura/config/YokuraGlobalConfig.java
 index 7547132521b586f329abe0d51c89b4245d12aa1f..234c34d5bade01bee91f3d95559c9a50f5615133 100644
 --- a/src/main/java/fr/hygon/yokura/config/YokuraGlobalConfig.java
@@ -506,17 +470,16 @@ index 0000000000000000000000000000000000000000..167bf785bff5f2d13afb2ae78db252c2
 +}
 \ No newline at end of file
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 0dfd3c3901bd8ee6f5afc6dc1f22c5d976a7168d..3a07d095a7abad32680067a50fc3ea864602d2a4 100644
+index 8da2ef6dd59e6a196ae594451cb7c2dca251c156..5b2b8979cb9848757c310ed37686a3cbf59e434d 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -244,6 +244,14 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -243,6 +243,13 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
              return false;
          }
  
-+        fr.hygon.yokura.YokuraAPI.setInstance(new fr.hygon.yokura.YokuraAPIServer((String) options.valueOf("network-server-name")));
-+
-+        if(fr.hygon.yokura.YokuraAPI.getServerID() != null) {
-+            fr.hygon.yokura.logger.DiscordLogger appender = new fr.hygon.yokura.logger.DiscordLogger((String) options.valueOf("network-server-name"));
++        String serverID = (String) options.valueOf("network-server-name");
++        if(serverID != null) {
++            fr.hygon.yokura.logger.DiscordLogger appender = new fr.hygon.yokura.logger.DiscordLogger(serverID);
 +            appender.start();
 +            ((org.apache.logging.log4j.core.Logger) LogManager.getRootLogger()).addAppender(appender);
 +        }
@@ -524,13 +487,3 @@ index 0dfd3c3901bd8ee6f5afc6dc1f22c5d976a7168d..3a07d095a7abad32680067a50fc3ea86
          com.mongodb.MongoCredential mongoCredential = com.mongodb.MongoCredential.createCredential(YokuraGlobalConfig.mongoUser, YokuraGlobalConfig.mongoDatabase, YokuraGlobalConfig.mongoPassword);
          com.mongodb.MongoClient mongoClient = new com.mongodb.MongoClient(new com.mongodb.ServerAddress(YokuraGlobalConfig.mongoHost, YokuraGlobalConfig.mongoPort), mongoCredential, com.mongodb.MongoClientOptions.builder().build());
          com.mongodb.client.MongoDatabase mongoDatabase = mongoClient.getDatabase(YokuraGlobalConfig.mongoDatabase);
-@@ -256,7 +264,8 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
-             return false;
-         }
- 
--        fr.hygon.yokura.YokuraAPI.setInstance(new fr.hygon.yokura.YokuraAPIServer(mongoClient, mongoDatabase, (String) options.valueOf("network-server-name")));
-+        ((fr.hygon.yokura.YokuraAPIServer) fr.hygon.yokura.YokuraAPI.getInstance()).setMongoClient(mongoClient);
-+        ((fr.hygon.yokura.YokuraAPIServer) fr.hygon.yokura.YokuraAPI.getInstance()).setMongoDatabase(mongoDatabase);
- 
-         YokuraBroker broker = new YokuraBroker();
-         if(!broker.connect(YokuraGlobalConfig.brokerHost, YokuraGlobalConfig.brokerPort)) {
